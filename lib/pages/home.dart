@@ -66,9 +66,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
   
-  // NOTE: Replace 'YOUR_GROQ_API_KEY_HERE' with your real API key from Groq Console.
-  // Using a temporary hardcoded string so the chatbot UI can be tested immediately.
-  final _factCheckService = FactCheckService(apiKey: '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');
+  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
+  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
  
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
