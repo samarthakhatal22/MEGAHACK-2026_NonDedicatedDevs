@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:civicshield/pages/authenticate.dart';
+import 'pages/authenticate.dart';
+
 void main() {
-  runApp(const MainApp());
+  runApp(const CivicApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class CivicApp extends StatelessWidget {
+  const CivicApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+      debugShowCheckedModeBanner: false,
+      home: AuthenticatePage(), //authentication UI
     );
   }
 }
