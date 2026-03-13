@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../file/screens/profile.dart';
 import 'scam_alert.dart';
 
 class PolicyModel {
@@ -98,21 +99,12 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6750A4),
-      brightness: Brightness.light,
-    );
+    final colorScheme = Theme.of(context).colorScheme;
     
-    return Theme(
-      data: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-        fontFamily: 'GoogleSans',
-      ),
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        body: SafeArea(
-          child: Column(
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: SafeArea(
+        child: Column(
             children: [
               _buildTopAppBar(context, colorScheme, user, initials),
               Expanded(
@@ -147,8 +139,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        bottomNavigationBar: _buildBottomNav(context),
-      ),
+      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -709,7 +700,14 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
-        setState(() => _selectedNavIndex = index);
+        if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
+          );
+        } else {
+          setState(() => _selectedNavIndex = index);
+        }
       },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
