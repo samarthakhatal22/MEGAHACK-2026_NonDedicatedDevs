@@ -1,7 +1,35 @@
+//wsdfggfdsa
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../file/screens/profile.dart';
 import 'scam_alert.dart';
+import 'search_page.dart';
+import 'profile.dart';
+import 'ScamAlert.dart';
+
+import 'fact_check_chat.dart';
+import '../services/fact_check_service.dart';
+ 
+class PolicyLensApp extends StatelessWidget {
+  const PolicyLensApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'PolicyLens',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6750A4),
+          brightness: Brightness.light,
+        ),
+        fontFamily: 'GoogleSans',
+      ),
+      home: const HomePage(),
+    );
+  }
+}
 
 class PolicyModel {
   final String title;
@@ -45,6 +73,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
+  
+  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
+  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
+ 
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
     MetricModel(value: '47', label: 'Updated this month'),
@@ -135,10 +167,42 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
+        child: _selectedNavIndex == 2 
+            ? FactCheckChatPage(service: _factCheckService)
+            : Column(
+                children: [
+                  _buildTopAppBar(context),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          _buildSearchBar(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Overview'),
+                          const SizedBox(height: 8),
+                          _buildMetricsGrid(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent policies'),
+                          const SizedBox(height: 8),
+                          _buildPoliciesCard(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'AI activity'),
+                          const SizedBox(height: 8),
+                          _buildAIActivityCard(context),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
+      ),
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
@@ -709,6 +773,23 @@ class _HomePageState extends State<HomePage> {
           setState(() => _selectedNavIndex = index);
         }
       },
+  if (index == 1) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchPage()),
+    );
+  } else if (index == 4) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfilePage()),
+    );
+  } else {
+    setState(() => _selectedNavIndex = index);
+  }
+},
+      // onDestinationSelected: (index) {
+     // setState(() => _selectedNavIndex = index);
+      // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
@@ -722,9 +803,9 @@ class _HomePageState extends State<HomePage> {
           label: 'Search',
         ),
         NavigationDestination(
-          icon: Icon(Icons.upload_file_outlined),
-          selectedIcon: Icon(Icons.upload_file),
-          label: 'Upload',
+          icon: Icon(Icons.verified_outlined),
+          selectedIcon: Icon(Icons.verified),
+          label: 'Fact Check',
         ),
         NavigationDestination(
           icon: Icon(Icons.compare_arrows_outlined),

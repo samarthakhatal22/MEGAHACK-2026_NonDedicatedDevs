@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'one/providers/theme_provider.dart';
 import 'pages/authenticate.dart';
 import 'pages/home.dart';
+import 'pages/profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,12 @@ class MyApp extends StatelessWidget {
           return const AuthenticatePage();
         },
       ),
+    return  MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home:const AuthenticatePage(), //authentication UI
+      routes: {
+        '/profile': (context) => const ProfilePage(), // ← keep this
+      },
     );
   }
 }
