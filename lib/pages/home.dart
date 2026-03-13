@@ -1,5 +1,8 @@
 //wsdfggfdsa
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../file/screens/profile.dart';
+import 'scam_alert.dart';
 import 'search_page.dart';
 import 'profile.dart';
 import 'ScamAlert.dart';
@@ -116,40 +119,53 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    // Extract user initials for avatar
+    final user = FirebaseAuth.instance.currentUser;
+    String initials = "U";
+    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+      List<String> names = user.displayName!.split(" ");
+      if (names.length >= 2) {
+        initials = "${names[0][0]}${names[1][0]}".toUpperCase();
+      } else {
+        initials = names[0][0].toUpperCase();
+      }
+    }
 
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
-          children: [
-            _buildTopAppBar(context),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    _buildSearchBar(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'Overview'),
-                    const SizedBox(height: 8),
-                    _buildMetricsGrid(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'Recent policies'),
-                    const SizedBox(height: 8),
-                    _buildPoliciesCard(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'Recent Scam Alerts'),
-                    const SizedBox(height: 8),
-                    _buildScamAlertsCard(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'AI activity'),
-                    const SizedBox(height: 8),
-                    _buildAIActivityCard(context),
-                    const SizedBox(height: 24),
-                  ],
+            children: [
+              _buildTopAppBar(context, colorScheme, user, initials),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      _buildSearchBar(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'Overview', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildMetricsGrid(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'Recent policies', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildPoliciesCard(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildScamAlertsCard(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'AI activity', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildAIActivityCard(context, colorScheme),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
         child: _selectedNavIndex == 2 
             ? FactCheckChatPage(service: _factCheckService)
@@ -183,14 +199,15 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
-  Widget _buildTopAppBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildTopAppBar(BuildContext context, ColorScheme colorScheme, User? user, String initials) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
@@ -227,26 +244,48 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: colorScheme.primaryContainer,
-            child: Text(
-              'AP',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onPrimaryContainer,
+          
+          // Added a popup menu to the avatar to allow logout
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await FirebaseAuth.instance.signOut();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Sign out'),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
+            ],
+            child: user?.photoURL != null 
+              ? CircleAvatar(
+                  radius: 18,
+                  backgroundImage: NetworkImage(user!.photoURL!),
+                )
+              : CircleAvatar(
+                  radius: 18,
+                  backgroundColor: colorScheme.primaryContainer,
+                  child: Text(
+                    initials,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildSearchBar(BuildContext context, ColorScheme colorScheme) {
     return GestureDetector(
       onTap: () {},
       child: Container(
@@ -275,9 +314,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionLabel(BuildContext context, String label) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildSectionLabel(BuildContext context, String label, ColorScheme colorScheme) {
     return Text(
       label.toUpperCase(),
       style: TextStyle(
@@ -289,9 +326,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMetricsGrid(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildMetricsGrid(BuildContext context, ColorScheme colorScheme) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -337,9 +372,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPoliciesCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildPoliciesCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -353,7 +386,7 @@ class _HomePageState extends State<HomePage> {
             final index = entry.key;
             final policy = entry.value;
             final isLast = index == _recentPolicies.length - 1;
-            return _buildPolicyListItem(context, policy, isLast);
+            return _buildPolicyListItem(context, policy, isLast, colorScheme);
           }),
         ],
       ),
@@ -361,11 +394,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPolicyListItem(
-    BuildContext context,
-    PolicyModel policy,
-    bool isLast,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
+      BuildContext context, PolicyModel policy, bool isLast, ColorScheme colorScheme) {
     final statusConfig = _getStatusConfig(policy.status);
 
     return InkWell(
@@ -498,9 +527,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildScamAlertsCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildScamAlertsCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -514,7 +541,7 @@ class _HomePageState extends State<HomePage> {
             final index = entry.key;
             final alert = entry.value;
             final isLast = index == scamAlertsData.length - 1;
-            return _buildScamAlertListItem(context, alert, isLast);
+            return _buildScamAlertListItem(context, alert, isLast, colorScheme);
           }),
         ],
       ),
@@ -525,8 +552,8 @@ class _HomePageState extends State<HomePage> {
     BuildContext context,
     Map<String, dynamic> alert,
     bool isLast,
+    ColorScheme colorScheme,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final riskLevel = alert['risk_level'] as String;
     
     Color riskColor;
@@ -667,9 +694,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildAIActivityCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildAIActivityCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -739,6 +764,15 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
+        if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
+          );
+        } else {
+          setState(() => _selectedNavIndex = index);
+        }
+      },
   if (index == 1) {
     Navigator.push(
       context,
