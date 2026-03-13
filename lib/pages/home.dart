@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile.dart';
  
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
@@ -522,8 +523,18 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
-        setState(() => _selectedNavIndex = index);
-      },
+  if (index == 4) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfilePage()),
+    );
+  } else {
+    setState(() => _selectedNavIndex = index);
+  }
+},
+      // onDestinationSelected: (index) {
+     // setState(() => _selectedNavIndex = index);
+      // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(

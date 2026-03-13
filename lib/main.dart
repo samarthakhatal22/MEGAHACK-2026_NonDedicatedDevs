@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'pages/authenticate.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'pages/profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,9 +17,12 @@ class CivicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return  MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthenticatePage(), //authentication UI
+      home:const AuthenticatePage(), //authentication UI
+      routes: {
+        '/profile': (context) => const ProfilePage(), // ← keep this
+      },
     );
   }
 }
