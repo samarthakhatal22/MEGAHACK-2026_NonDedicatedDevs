@@ -7,14 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:299870255203:android:d3ba82c18a984923922056",
+        "mobilesdk_app_id": "1:299870255203:android:02a083f18e7812b8922056",
         "android_client_info": {
           "package_name": "com.example.civicshield"
         }
       },
       "oauth_client": [
         {
-          "client_id": "299870255203-5al8pspk1dr68hetuc169dncmi35o77f.apps.googleusercontent.com",
+          "client_id": "299870255203-gme1itpv8962mkoskkeuu3trg6qos8vk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.civicshield",
+            "certificate_hash": "b98a054e1b13366c9baadaeca390d99b8e9308d5"
+          }
+        },
+        {
+          "client_id": "299870255203-k527kvnrpthro4hceiksfei6ihs5ln71.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.civicshield",
