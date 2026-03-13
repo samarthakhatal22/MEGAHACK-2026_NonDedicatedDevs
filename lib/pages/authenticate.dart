@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'email_sign_in.dart';
+import 'email_sign_up.dart';
 
 class AuthenticatePage extends StatelessWidget {
   const AuthenticatePage({super.key});
@@ -64,11 +66,18 @@ class AuthenticatePage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 50),
+            
+            // Google Sign In Button
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.login),
-                label: const Text("Continue with Google"),
+                label: const Text("Continue with Google", style: TextStyle(fontSize: 16)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                ),
                 onPressed: () async {
                   final userCredential = await signInWithGoogle(context);
                   
@@ -81,10 +90,52 @@ class AuthenticatePage extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Secure login powered by Google",
-              style: TextStyle(color: Colors.grey),
+            
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text("OR", style: TextStyle(color: Colors.grey)),
+                ),
+                Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Email Sign In Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.email),
+                label: const Text("Sign In with Email", style: TextStyle(fontSize: 16)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EmailSignInPage()),
+                  );
+                },
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Email Sign Up Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.person_add),
+                label: const Text("Sign Up with Email", style: TextStyle(fontSize: 16)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EmailSignUpPage()),
+                  );
+                },
+              ),
             ),
           ],
         ),
