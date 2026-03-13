@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
- 
+import 'ScamAlert.dart';
+
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
- 
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,13 +21,13 @@ class PolicyLensApp extends StatelessWidget {
     );
   }
 }
- 
+
 class PolicyModel {
   final String title;
   final String ministry;
   final String date;
   final PolicyStatus status;
- 
+
   const PolicyModel({
     required this.title,
     required this.ministry,
@@ -34,16 +35,16 @@ class PolicyModel {
     required this.status,
   });
 }
- 
+
 enum PolicyStatus { active, draft, conflict, review }
- 
+
 class MetricModel {
   final String value;
   final String label;
   final Color? backgroundColor;
   final Color? valueColor;
   final Color? labelColor;
- 
+
   const MetricModel({
     required this.value,
     required this.label,
@@ -52,17 +53,17 @@ class MetricModel {
     this.labelColor,
   });
 }
- 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
- 
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
- 
+
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
- 
+
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
     MetricModel(value: '47', label: 'Updated this month'),
@@ -75,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       labelColor: Color(0xFF8C1D18),
     ),
   ];
- 
+
   final List<PolicyModel> _recentPolicies = const [
     PolicyModel(
       title: 'Digital India Act 2024',
@@ -102,11 +103,11 @@ class _HomePageState extends State<HomePage> {
       status: PolicyStatus.review,
     ),
   ];
- 
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
@@ -130,6 +131,10 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 8),
                     _buildPoliciesCard(context),
                     const SizedBox(height: 20),
+                    _buildSectionLabel(context, 'Recent Scam Alerts'),
+                    const SizedBox(height: 8),
+                    _buildScamAlertsCard(context),
+                    const SizedBox(height: 20),
                     _buildSectionLabel(context, 'AI activity'),
                     const SizedBox(height: 8),
                     _buildAIActivityCard(context),
@@ -144,10 +149,10 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
- 
+
   Widget _buildTopAppBar(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
@@ -200,10 +205,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   Widget _buildSearchBar(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return GestureDetector(
       onTap: () {},
       child: Container(
@@ -231,10 +236,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   Widget _buildSectionLabel(BuildContext context, String label) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Text(
       label.toUpperCase(),
       style: TextStyle(
@@ -245,10 +250,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   Widget _buildMetricsGrid(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -293,10 +298,10 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
- 
+
   Widget _buildPoliciesCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -316,12 +321,15 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   Widget _buildPolicyListItem(
-      BuildContext context, PolicyModel policy, bool isLast) {
+    BuildContext context,
+    PolicyModel policy,
+    bool isLast,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusConfig = _getStatusConfig(policy.status);
- 
+
     return InkWell(
       onTap: () {},
       borderRadius: isLast
@@ -390,10 +398,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   Widget _buildStatusChip(PolicyStatus status) {
     final config = _getStatusConfig(status);
- 
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -410,7 +418,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   _StatusConfig _getStatusConfig(PolicyStatus status) {
     switch (status) {
       case PolicyStatus.active:
@@ -451,10 +459,179 @@ class _HomePageState extends State<HomePage> {
         );
     }
   }
- 
+
+  Widget _buildScamAlertsCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+      ),
+      color: colorScheme.surface,
+      child: Column(
+        children: [
+          ...scamAlertsData.asMap().entries.map((entry) {
+            final index = entry.key;
+            final alert = entry.value;
+            final isLast = index == scamAlertsData.length - 1;
+            return _buildScamAlertListItem(context, alert, isLast);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScamAlertListItem(
+    BuildContext context,
+    Map<String, dynamic> alert,
+    bool isLast,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final riskLevel = alert['risk_level'] as String;
+    
+    Color riskColor;
+    Color riskBg;
+    if (riskLevel == 'High') {
+      riskColor = const Color(0xFF8C1D18);
+      riskBg = const Color(0xFFFCDAD7);
+    } else if (riskLevel == 'Medium') {
+      riskColor = const Color(0xFF7A4F00);
+      riskBg = const Color(0xFFFFF0C5);
+    } else {
+      riskColor = const Color(0xFF1A5E20);
+      riskBg = const Color(0xFFD7EDCA);
+    }
+
+    return InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(alert['title']),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Why it is fake:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(alert['why_it_is_fake']),
+                  const SizedBox(height: 12),
+                  const Text('How to stay safe:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(alert['how_to_stay_safe']),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      },
+      borderRadius: isLast
+          ? const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            )
+          : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: riskBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                size: 20,
+                color: riskColor,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    alert['title'],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    alert['short_description'],
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          alert['platform_spread'],
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          alert['scam_type'],
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAIActivityCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -505,8 +682,10 @@ class _HomePageState extends State<HomePage> {
             FilledButton.tonal(
               onPressed: () {},
               style: FilledButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -517,7 +696,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
- 
+
   Widget _buildBottomNav(BuildContext context) {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
@@ -555,7 +734,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
- 
+
 class _StatusConfig {
   final String label;
   final IconData icon;
@@ -563,7 +742,7 @@ class _StatusConfig {
   final Color iconColor;
   final Color chipBg;
   final Color chipText;
- 
+
   _StatusConfig({
     required this.label,
     required this.icon,
