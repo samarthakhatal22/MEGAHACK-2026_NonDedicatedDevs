@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import '../models/fact_result.dart';
 
 class FactCheckService {
@@ -10,10 +11,10 @@ class FactCheckService {
 
   FactCheckService({required this.apiKey});
 
-  Future<FactResult> verifyClaim({String? text, Uint8List? imageBytes}) async {
+  Future<FactResult> verifyClaim({String? text, Uint8List? imageBytes, String? imageUrl}) async {
     try {
-      if ((text == null || text.trim().isEmpty) && imageBytes == null) {
-        throw ArgumentError('Must provide either text or image.');
+      if ((text == null || text.trim().isEmpty) && imageBytes == null && imageUrl == null) {
+        throw ArgumentError('Must provide text, image bytes, or an image URL.');
       }
 
       final String systemPrompt = '''
@@ -35,7 +36,12 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       if (text != null && text.trim().isNotEmpty) {
         requestMessages.add({'type': 'text', 'text': text});
       }
-      if (imageBytes != null) {
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        requestMessages.add({
+          'type': 'image_url',
+          'image_url': {'url': imageUrl}
+        });
+      } else if (imageBytes != null) {
         final base64Image = base64Encode(imageBytes);
         requestMessages.add({
           'type': 'image_url',
@@ -72,7 +78,7 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       return FactResult.fromJson(jsonMap);
 
     } catch (e) {
-      print('CRITICAL: FactCheckService Error: $e');
+      debugPrint('CRITICAL: FactCheckService Error: $e');
       throw Exception('Failed to verify information: $e');
     }
   }

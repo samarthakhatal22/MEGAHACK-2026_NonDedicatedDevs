@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../services/fact_check_service.dart';
+import '../services/cloudinary_service.dart';
 import '../models/fact_result.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'dart:io' show File;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 enum MessageRole { user, assistant }
 
@@ -13,12 +16,14 @@ class ChatMessage {
   final MessageRole role;
   final FactResult? result;
   final Uint8List? imageBytes;
+  final String? imageUrl;
 
   ChatMessage({
     required this.text,
     required this.role,
     this.result,
     this.imageBytes,
+    this.imageUrl,
   });
 }
 
@@ -41,13 +46,30 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   Uint8List? _imageBytes;
   bool _isLoading = false;
 
+  Future<File?> pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        return File(image.path);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+    return null;
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
         maxWidth: 1024,
         maxHeight: 1024,
-        imageQuality: 85,
+        imageQuality: 80,
       );
       if (image != null) {
         final bytes = await image.readAsBytes();
@@ -97,6 +119,8 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     });
 
     final bytesToSend = _imageBytes;
+    final fileToUpload = _selectedImage != null ? File(_selectedImage!.path) : null;
+
     _textController.clear();
     setState(() {
       _selectedImage = null;
@@ -107,19 +131,53 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     FocusScope.of(context).unfocus();
 
     try {
+      String? imageUrl;
+      
+      // 1. Upload to Cloudinary if image exists
+      if (fileToUpload != null) {
+        final cloudinary = CloudinaryService();
+        imageUrl = await cloudinary.uploadImage(fileToUpload);
+      }
+
+      // 2. Verify with FactCheckService
       final result = await widget.service.verifyClaim(
         text: query,
-        imageBytes: bytesToSend,
+        imageBytes: bytesToSend, // Keep bytes as backup/fallback
+        imageUrl: imageUrl,      // Pass the new URL
       );
+
       setState(() {
         _messages.add(ChatMessage(
           text: result.isAiGenerated == true 
               ? "⚠️ Potential AI Manipulation Detected." 
-              : "Verification complete.",
+              : (imageUrl != null 
+                  ? "Verification complete. Image Link: $imageUrl" 
+                  : "Verification complete."),
           role: MessageRole.assistant,
           result: result,
+          imageUrl: imageUrl,
         ));
       });
+
+      // 3. Store result in Firestore
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        await FirebaseFirestore.instance.collection("fact_checks").add({
+          'userId': user?.uid ?? 'anonymous',
+          'queryText': query,
+          'imageUrl': imageUrl,
+          'timestamp': FieldValue.serverTimestamp(),
+          'result': {
+            'status': result.status,
+            'accuracy_percentage': result.score,
+            'explanation': result.simpleDescription,
+            'references': result.references,
+          },
+        });
+        debugPrint('Fact check saved to Firestore successfully.');
+      } catch (firestoreError) {
+        debugPrint('Error saving to Firestore: $firestoreError');
+      }
     } catch (e) {
       setState(() {
         _messages.add(ChatMessage(
@@ -349,6 +407,27 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                         message.imageBytes!,
                         width: double.infinity,
                         fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                if (message.imageUrl != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        message.imageUrl!,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: 200,
+                            color: colorScheme.surfaceContainerHighest,
+                            child: const Center(child: CircularProgressIndicator()),
+                          );
+                        },
                       ),
                     ),
                   ),
