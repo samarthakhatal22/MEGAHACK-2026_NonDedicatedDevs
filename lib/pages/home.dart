@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'search_page.dart';
 import 'profile.dart';
-import 'ScamAlert.dart';
-
+//import 'ScamAlert.dart';
+import 'package:civicshield/Widgets/scamalertsection.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
  
@@ -71,8 +71,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
   
-  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
-  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
+  final _factCheckService = FactCheckService(apiKey: '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');
  
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
@@ -143,9 +142,8 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 8),
                           _buildPoliciesCard(context),
                           const SizedBox(height: 20),
-                          _buildSectionLabel(context, 'Recent Scam Alerts'),
-                          const SizedBox(height: 8),
-                          _buildScamAlertsCard(context),
+                          // ScamAlertSection renders its own "RECENT SCAM ALERTS" label
+                          const ScamAlertSection(),
                           const SizedBox(height: 20),
                           _buildSectionLabel(context, 'AI activity'),
                           const SizedBox(height: 8),
@@ -472,7 +470,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildScamAlertsCard(BuildContext context) {
+/* Widget _buildScamAlertsCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -493,153 +491,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  Widget _buildScamAlertListItem(
-    BuildContext context,
-    Map<String, dynamic> alert,
-    bool isLast,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final riskLevel = alert['risk_level'] as String;
-    
-    Color riskColor;
-    Color riskBg;
-    if (riskLevel == 'High') {
-      riskColor = const Color(0xFF8C1D18);
-      riskBg = const Color(0xFFFCDAD7);
-    } else if (riskLevel == 'Medium') {
-      riskColor = const Color(0xFF7A4F00);
-      riskBg = const Color(0xFFFFF0C5);
-    } else {
-      riskColor = const Color(0xFF1A5E20);
-      riskBg = const Color(0xFFD7EDCA);
-    }
-
-    return InkWell(
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(alert['title']),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Why it is fake:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(alert['why_it_is_fake']),
-                  const SizedBox(height: 12),
-                  const Text('How to stay safe:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(alert['how_to_stay_safe']),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      },
-      borderRadius: isLast
-          ? const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            )
-          : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          border: isLast
-              ? null
-              : Border(
-                  bottom: BorderSide(
-                    color: colorScheme.outlineVariant,
-                    width: 0.5,
-                  ),
-                ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 2),
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: riskBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.warning_amber_rounded,
-                size: 20,
-                color: riskColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    alert['title'],
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    alert['short_description'],
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          alert['platform_spread'],
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          alert['scam_type'],
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  }*/             //static data for scam alerts
 
   Widget _buildAIActivityCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
