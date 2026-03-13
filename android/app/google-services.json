@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "453478818769",
+    "project_id": "civicshield-e8818",
+    "storage_bucket": "civicshield-e8818.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453478818769:android:7a5fdc1192c630d098f6f0",
+        "android_client_info": {
+          "package_name": "com.example.civicshield"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5hNN5MmCXTrn82DizwM8lkxJwjAwcjcY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
