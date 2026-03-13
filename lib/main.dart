@@ -1,7 +1,5 @@
-
-// heslzfkdxnc
 import 'package:flutter/material.dart';
-
+import 'package:civicshield/pages/authenticate.dart';
 void main() {
   runApp(const MainApp());
 }
