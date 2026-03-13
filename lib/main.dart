@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:civicshield/pages/home_page.dart';
-
+import 'package:civicshield/pages/authenticate.dart';
 void main() {
-  runApp(const CivicShieldApp());
+  runApp(const MainApp());
 }
 
-class CivicShieldApp extends StatelessWidget {
-  const CivicShieldApp({super.key});
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PolicyLens',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6750A4),
-          brightness: Brightness.light,
+    return const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Hello World!'),
         ),
-        fontFamily: 'GoogleSans',
       ),
-      home: const HomePage(),
     );
   }
 }
