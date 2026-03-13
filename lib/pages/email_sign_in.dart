@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'home.dart';
 
 class EmailSignInPage extends StatefulWidget {
   const EmailSignInPage({super.key});
@@ -29,8 +30,11 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Welcome back, ${userCredential.user?.email}!')),
         );
-        // TODO: Navigate to Home Page
-        // Navigator.of(context).pushReplacement(...);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (Route<dynamic> route) => false,
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {

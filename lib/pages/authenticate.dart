@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'email_sign_in.dart';
 import 'email_sign_up.dart';
+import 'home.dart';
 
 class AuthenticatePage extends StatelessWidget {
   const AuthenticatePage({super.key});
@@ -85,7 +86,11 @@ class AuthenticatePage extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Successfully signed in as ${userCredential.user?.displayName}!')),
                     );
-                    // TODO: Navigate to the next screen here
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomePage()),
+                      (Route<dynamic> route) => false,
+                    );
                   }
                 },
               ),
