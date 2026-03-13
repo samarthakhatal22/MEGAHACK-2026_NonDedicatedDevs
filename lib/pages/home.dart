@@ -524,7 +524,12 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
-  if (index == 4) {
+  if (index == 1) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchPage()),
+    );
+  } else if (index == 4) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ProfilePage()),
