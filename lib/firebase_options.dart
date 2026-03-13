@@ -42,17 +42,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyAJtVCHcmayZbYiSzijUWxp9hOoZrz7QuI',
-    appId: '1:299870255203:web:bf1f5bab26db7109922056',
+    appId: '1:299870255203:web:8f2934ddb822ecfc922056',
     messagingSenderId: '299870255203',
     projectId: 'civicsheild-3d808',
     authDomain: 'civicsheild-3d808.firebaseapp.com',
     storageBucket: 'civicsheild-3d808.firebasestorage.app',
-    measurementId: 'G-FHS5V0FXWR',
+    measurementId: 'G-5HJNLZSPFD',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCzOp8HFnKz5MuZVS305s0hmMIT1GwQ5lo',
-    appId: '1:299870255203:android:d3ba82c18a984923922056',
+    appId: '1:299870255203:android:02a083f18e7812b8922056',
     messagingSenderId: '299870255203',
     projectId: 'civicsheild-3d808',
     storageBucket: 'civicsheild-3d808.firebasestorage.app',
@@ -60,29 +60,34 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCz2LPIToRBU6br1vpg-4JVpKxCXqSqliI',
-    appId: '1:299870255203:ios:6a43fc8ca9457c38922056',
+    appId: '1:299870255203:ios:ecde756fd61c64aa922056',
     messagingSenderId: '299870255203',
     projectId: 'civicsheild-3d808',
     storageBucket: 'civicsheild-3d808.firebasestorage.app',
+    androidClientId: '299870255203-5al8pspk1dr68hetuc169dncmi35o77f.apps.googleusercontent.com',
+    iosClientId: '299870255203-45dpe7jns81d8l249frs1bdmhahc5hqa.apps.googleusercontent.com',
     iosBundleId: 'com.example.civicshield',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCz2LPIToRBU6br1vpg-4JVpKxCXqSqliI',
-    appId: '1:299870255203:ios:6a43fc8ca9457c38922056',
+    appId: '1:299870255203:ios:ecde756fd61c64aa922056',
     messagingSenderId: '299870255203',
     projectId: 'civicsheild-3d808',
     storageBucket: 'civicsheild-3d808.firebasestorage.app',
+    androidClientId: '299870255203-5al8pspk1dr68hetuc169dncmi35o77f.apps.googleusercontent.com',
+    iosClientId: '299870255203-45dpe7jns81d8l249frs1bdmhahc5hqa.apps.googleusercontent.com',
     iosBundleId: 'com.example.civicshield',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyAJtVCHcmayZbYiSzijUWxp9hOoZrz7QuI',
-    appId: '1:299870255203:web:7af8a5ceae633bdf922056',
+    appId: '1:299870255203:web:7ae47065964a49a6922056',
     messagingSenderId: '299870255203',
     projectId: 'civicsheild-3d808',
     authDomain: 'civicsheild-3d808.firebaseapp.com',
     storageBucket: 'civicsheild-3d808.firebasestorage.app',
-    measurementId: 'G-CGNRS6NHFV',
+    measurementId: 'G-0S3BT48LP9',
   );
+
 }
