@@ -1,5 +1,6 @@
 // lib/data/scam_alerts_data.dart
 
+import 'package:flutter/material.dart';
 const List<Map<String, dynamic>> scamAlertsData = [
   {
     "title": "Free Government 5G Mobile Recharge",
@@ -62,3 +63,31 @@ const List<Map<String, dynamic>> scamAlertsData = [
     "platform_spread": "Instagram",
   },
 ];
+
+class ScamAlerts extends StatelessWidget {
+  const ScamAlerts({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scam Alerts'),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: scamAlertsData.length,
+        itemBuilder: (context, index) {
+          final alert = scamAlertsData[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: const Icon(Icons.warning_amber_rounded, color: Color(0xFF8C1D18)),
+              title: Text(alert['title']),
+              subtitle: Text(alert['short_description']),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
