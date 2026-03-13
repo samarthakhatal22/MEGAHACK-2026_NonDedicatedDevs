@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'one/providers/theme_provider.dart';
 import 'pages/authenticate.dart';
 import 'pages/home.dart';
+import 'pages/profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: themeProvider.themeMode, // controlled by toggle in profile
+      routes: {
+        '/profile': (context) => const ProfilePage(), // keep named route as fallback
+      },
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

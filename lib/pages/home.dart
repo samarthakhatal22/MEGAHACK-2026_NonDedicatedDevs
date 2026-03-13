@@ -1,7 +1,11 @@
+//wsdfggfdsa
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../file/screens/profile.dart';
 import 'scam_alert.dart';
+import 'search_page.dart';
+import 'profile.dart';
+import 'fact_check_chat.dart';
+import '../services/fact_check_service.dart';
 
 class PolicyModel {
   final String title;
@@ -45,6 +49,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
+  
+  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
+  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
+ 
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
     MetricModel(value: '47', label: 'Updated this month'),
@@ -104,41 +112,44 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-            children: [
-              _buildTopAppBar(context, colorScheme, user, initials),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 12),
-                      _buildSearchBar(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'Overview', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildMetricsGrid(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'Recent policies', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildPoliciesCard(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildScamAlertsCard(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'AI activity', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildAIActivityCard(context, colorScheme),
-                      const SizedBox(height: 24),
-                    ],
+        child: _selectedNavIndex == 2 
+            ? FactCheckChatPage(service: _factCheckService)
+            : Column(
+                children: [
+                  _buildTopAppBar(context, colorScheme, user, initials),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          _buildSearchBar(context, colorScheme),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Overview', colorScheme),
+                          const SizedBox(height: 8),
+                          _buildMetricsGrid(context, colorScheme),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent policies', colorScheme),
+                          const SizedBox(height: 8),
+                          _buildPoliciesCard(context, colorScheme),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
+                          const SizedBox(height: 8),
+                          _buildScamAlertsCard(context, colorScheme),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'AI activity', colorScheme),
+                          const SizedBox(height: 8),
+                          _buildAIActivityCard(context, colorScheme),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
+      ),
+
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
@@ -700,10 +711,15 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
-        if (index == 4) {
+        if (index == 1) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ProfilePage()),
+            MaterialPageRoute(builder: (_) => const SearchPage()),
+          );
+        } else if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfilePage()),
           );
         } else {
           setState(() => _selectedNavIndex = index);
@@ -722,9 +738,9 @@ class _HomePageState extends State<HomePage> {
           label: 'Search',
         ),
         NavigationDestination(
-          icon: Icon(Icons.upload_file_outlined),
-          selectedIcon: Icon(Icons.upload_file),
-          label: 'Upload',
+          icon: Icon(Icons.verified_outlined),
+          selectedIcon: Icon(Icons.verified),
+          label: 'Fact Check',
         ),
         NavigationDestination(
           icon: Icon(Icons.compare_arrows_outlined),
