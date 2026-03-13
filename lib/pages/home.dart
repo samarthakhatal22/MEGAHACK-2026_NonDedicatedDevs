@@ -1,6 +1,10 @@
+//wsdfggfdsa
 import 'package:flutter/material.dart';
 import 'ScamAlert.dart';
 
+import 'fact_check_chat.dart';
+import '../services/fact_check_service.dart';
+ 
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
 
@@ -64,6 +68,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
+  
+  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
+  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
+ 
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
     MetricModel(value: '47', label: 'Updated this month'),
@@ -141,10 +149,38 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 24),
                   ],
                 ),
+        child: _selectedNavIndex == 2 
+            ? FactCheckChatPage(service: _factCheckService)
+            : Column(
+                children: [
+                  _buildTopAppBar(context),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          _buildSearchBar(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Overview'),
+                          const SizedBox(height: 8),
+                          _buildMetricsGrid(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent policies'),
+                          const SizedBox(height: 8),
+                          _buildPoliciesCard(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'AI activity'),
+                          const SizedBox(height: 8),
+                          _buildAIActivityCard(context),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
@@ -716,9 +752,9 @@ class _HomePageState extends State<HomePage> {
           label: 'Search',
         ),
         NavigationDestination(
-          icon: Icon(Icons.upload_file_outlined),
-          selectedIcon: Icon(Icons.upload_file),
-          label: 'Upload',
+          icon: Icon(Icons.verified_outlined),
+          selectedIcon: Icon(Icons.verified),
+          label: 'Fact Check',
         ),
         NavigationDestination(
           icon: Icon(Icons.compare_arrows_outlined),
