@@ -6,7 +6,7 @@ import '../models/fact_result.dart';
 class FactCheckService {
   final String apiKey;
   static const String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
-  static const String _model = 'llama-3.3-70b-versatile';
+  static const String _model = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
   FactCheckService({required this.apiKey});
 
@@ -16,21 +16,32 @@ class FactCheckService {
         throw ArgumentError('Must provide either text or image.');
       }
 
-      // Note: As of now, Groq's llama-3.3-70b-versatile might not support image inputs directly in this specific way.
-      // We will focus on text-based verification for this implementation.
-      // If imageBytes are provided, we'd ideally use a vision-capable model if available on Groq.
-      
       final String systemPrompt = '''
-You are a civic integrity bot. Find official Indian government notifications from pib.gov.in or india.gov.in to verify this claim. 
+You are a civic integrity bot. Find official Indian government notifications from pib.gov.in or india.gov.in to verify this claim or image. 
 Always return your response as a valid JSON object matching exactly this format: 
 {
   "accuracy_percentage": 0, 
   "status": "string", 
   "easy_explanation": "string",
-  "references": ["link1", "link2"]
+  "references": ["https://link1", "https://link2"],
+  "is_ai_generated": boolean,
+  "authenticity_reason": "string (why it is or isn't AI generated/manipulated)"
 }
+IMPORTANT: References MUST be full URLs starting with https://.
 Do not include markdown blocks like ```json, just the raw JSON brackets.
 ''';
+
+      List<Map<String, dynamic>> requestMessages = [];
+      if (text != null && text.trim().isNotEmpty) {
+        requestMessages.add({'type': 'text', 'text': text});
+      }
+      if (imageBytes != null) {
+        final base64Image = base64Encode(imageBytes);
+        requestMessages.add({
+          'type': 'image_url',
+          'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
+        });
+      }
 
       final response = await http.post(
         Uri.parse(_baseUrl),
@@ -42,7 +53,7 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
           'model': _model,
           'messages': [
             {'role': 'system', 'content': systemPrompt},
-            {'role': 'user', 'content': text ?? 'Verify the claim in this image (Note: user provided an image).'}
+            {'role': 'user', 'content': requestMessages}
           ],
           'response_format': {'type': 'json_object'},
           'temperature': 0.1,
@@ -55,9 +66,9 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       }
 
       final Map<String, dynamic> data = jsonDecode(response.body);
-      final String content = data['choices'][0]['message']['content'];
+      final String responseText = data['choices'][0]['message']['content'];
       
-      final Map<String, dynamic> jsonMap = jsonDecode(content);
+      final Map<String, dynamic> jsonMap = jsonDecode(responseText);
       return FactResult.fromJson(jsonMap);
 
     } catch (e) {

@@ -121,37 +121,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopAppBar(context),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    _buildSearchBar(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'Overview'),
-                    const SizedBox(height: 8),
-                    _buildMetricsGrid(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'Recent policies'),
-                    const SizedBox(height: 8),
-                    _buildPoliciesCard(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'Recent Scam Alerts'),
-                    const SizedBox(height: 8),
-                    _buildScamAlertsCard(context),
-                    const SizedBox(height: 20),
-                    _buildSectionLabel(context, 'AI activity'),
-                    const SizedBox(height: 8),
-                    _buildAIActivityCard(context),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-        child: _selectedNavIndex == 2 
+        child: _selectedNavIndex == 2
             ? FactCheckChatPage(service: _factCheckService)
             : Column(
                 children: [
@@ -172,6 +142,10 @@ class _HomePageState extends State<HomePage> {
                           _buildSectionLabel(context, 'Recent policies'),
                           const SizedBox(height: 8),
                           _buildPoliciesCard(context),
+                          const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent Scam Alerts'),
+                          const SizedBox(height: 8),
+                          _buildScamAlertsCard(context),
                           const SizedBox(height: 20),
                           _buildSectionLabel(context, 'AI activity'),
                           const SizedBox(height: 8),
