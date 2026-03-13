@@ -1,5 +1,7 @@
 //wsdfggfdsa
 import 'package:flutter/material.dart';
+import 'search_page.dart';
+import 'profile.dart';
 import 'ScamAlert.dart';
 
 import 'fact_check_chat.dart';
@@ -737,8 +739,23 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
-        setState(() => _selectedNavIndex = index);
-      },
+  if (index == 1) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchPage()),
+    );
+  } else if (index == 4) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfilePage()),
+    );
+  } else {
+    setState(() => _selectedNavIndex = index);
+  }
+},
+      // onDestinationSelected: (index) {
+     // setState(() => _selectedNavIndex = index);
+      // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
