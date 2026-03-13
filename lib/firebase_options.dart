@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart'
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
-/// Project: civicshield-e8818
+/// Project: civicsheild-3d808
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -41,20 +41,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD5hNN5MmCXTrn82DizwM8lkxJwjAwcjcY',
-    appId: '1:453478818769:android:7a5fdc1192c630d098f6f0',
-    messagingSenderId: '453478818769',
-    projectId: 'civicshield-e8818',
-    storageBucket: 'civicshield-e8818.firebasestorage.app',
+    apiKey: 'AIzaSyCzOp8HFnKz5MuZVS305s0hmMIT1GwQ5lo',
+    appId: '1:299870255203:android:02a083f18e7812b8922056',
+    messagingSenderId: '299870255203',
+    projectId: 'civicsheild-3d808',
+    storageBucket: 'civicsheild-3d808.firebasestorage.app',
   );
 
   // TODO: Add your web app's Firebase config from Firebase Console
   // if you want to support web platform.
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD5hNN5MmCXTrn82DizwM8lkxJwjAwcjcY',
-    appId: '1:453478818769:android:7a5fdc1192c630d098f6f0',
-    messagingSenderId: '453478818769',
-    projectId: 'civicshield-e8818',
-    storageBucket: 'civicshield-e8818.firebasestorage.app',
+    apiKey: 'AIzaSyCzOp8HFnKz5MuZVS305s0hmMIT1GwQ5lo',
+    appId: '1:299870255203:android:02a083f18e7812b8922056',
+    messagingSenderId: '299870255203',
+    projectId: 'civicsheild-3d808',
+    storageBucket: 'civicsheild-3d808.firebasestorage.app',
   );
 }

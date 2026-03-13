@@ -1,26 +1,59 @@
 {
   "project_info": {
-    "project_number": "453478818769",
-    "project_id": "civicshield-e8818",
-    "storage_bucket": "civicshield-e8818.firebasestorage.app"
+    "project_number": "299870255203",
+    "project_id": "civicsheild-3d808",
+    "storage_bucket": "civicsheild-3d808.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:453478818769:android:7a5fdc1192c630d098f6f0",
+        "mobilesdk_app_id": "1:299870255203:android:02a083f18e7812b8922056",
         "android_client_info": {
           "package_name": "com.example.civicshield"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "299870255203-gme1itpv8962mkoskkeuu3trg6qos8vk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.civicshield",
+            "certificate_hash": "b98a054e1b13366c9baadaeca390d99b8e9308d5"
+          }
+        },
+        {
+          "client_id": "299870255203-k527kvnrpthro4hceiksfei6ihs5ln71.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.civicshield",
+            "certificate_hash": "1189ab8c4be9a428475db0dac5456483b9d2d89e"
+          }
+        },
+        {
+          "client_id": "299870255203-e4gghjp86l0ljj64knb2l1c82eeq55jn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyD5hNN5MmCXTrn82DizwM8lkxJwjAwcjcY"
+          "current_key": "AIzaSyCzOp8HFnKz5MuZVS305s0hmMIT1GwQ5lo"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "299870255203-e4gghjp86l0ljj64knb2l1c82eeq55jn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "299870255203-45dpe7jns81d8l249frs1bdmhahc5hqa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.civicshield"
+              }
+            }
+          ]
         }
       }
     }

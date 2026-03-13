@@ -34,7 +34,7 @@ class MetricModel {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});q
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
