@@ -100,6 +100,9 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 8),
                           _buildPoliciesCard(context, colorScheme),
                           const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
+                          const SizedBox(height: 8),
+                          // Specific section from earlier requirements
                           const ScamAlertSection(),
                           const SizedBox(height: 20),
                           _buildSectionLabel(context, 'AI activity', colorScheme),
@@ -435,6 +438,30 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /*
+  Widget _buildScamAlertsCard(BuildContext context, ColorScheme colorScheme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+      ),
+      color: colorScheme.surface,
+      child: Column(
+        children: [
+          ...scamAlertsData.asMap().entries.map((entry) {
+            final index = entry.key;
+            final alert = entry.value;
+            final isLast = index == scamAlertsData.length - 1;
+            return _buildScamAlertListItem(context, alert, isLast, colorScheme);
+          }),
+        ],
+      ),
+    );
+  }
+  */ //static data for scam alerts
+
+
   Widget _buildAIActivityCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
@@ -525,6 +552,9 @@ class _HomePageState extends State<HomePage> {
           });
         }
       },
+      // onDestinationSelected: (index) {
+      // setState(() => _selectedNavIndex = index);
+      // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
