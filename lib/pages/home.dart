@@ -5,11 +5,11 @@ import '../file/screens/profile.dart';
 import 'scam_alert.dart';
 import 'search_page.dart';
 import 'profile.dart';
-import 'ScamAlert.dart';
-
+//import 'ScamAlert.dart'; // updated branch
+import 'package:civicshield/Widgets/scamalertsection.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
- 
+
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
 
@@ -73,10 +73,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
-  
-  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
-  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
- 
+  final _factCheckService = FactCheckService(
+    apiKey: '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',
+  );
+
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
     MetricModel(value: '47', label: 'Updated this month'),
@@ -136,6 +136,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
+        child: _selectedNavIndex == 2
         child: Column(
             children: [
               _buildTopAppBar(context, colorScheme, user, initials),
@@ -188,6 +189,9 @@ class _HomePageState extends State<HomePage> {
                           _buildSectionLabel(context, 'Recent policies'),
                           const SizedBox(height: 8),
                           _buildPoliciesCard(context),
+                          const SizedBox(height: 20),
+                          // ScamAlertSection renders its own "RECENT SCAM ALERTS" label
+                          const ScamAlertSection(),
                           const SizedBox(height: 20),
                           _buildSectionLabel(context, 'AI activity'),
                           const SizedBox(height: 8),
@@ -527,6 +531,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /* Widget _buildScamAlertsCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
   Widget _buildScamAlertsCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
@@ -546,6 +553,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }*/ //static data for scam alerts
   }
 
   Widget _buildScamAlertListItem(
@@ -764,6 +772,15 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
+        if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SearchPage()),
+          );
+        } else if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfilePage()),
         if (index == 4) {
           Navigator.push(
             context,
@@ -788,7 +805,7 @@ class _HomePageState extends State<HomePage> {
   }
 },
       // onDestinationSelected: (index) {
-     // setState(() => _selectedNavIndex = index);
+      // setState(() => _selectedNavIndex = index);
       // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
