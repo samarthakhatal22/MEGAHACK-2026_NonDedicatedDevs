@@ -41,7 +41,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   final ImagePicker _picker = ImagePicker();
-  
+
   XFile? _selectedImage;
   Uint8List? _imageBytes;
   bool _isLoading = false;
@@ -87,10 +87,13 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   void initState() {
     super.initState();
     // Welcome message
-    _messages.add(ChatMessage(
-      text: "Hello! I'm your Civic Shield assistant. Send me any rumor or claim, and I'll verify it against official sources.",
-      role: MessageRole.assistant,
-    ));
+    _messages.add(
+      ChatMessage(
+        text:
+            "Hello! I'm your Civic Shield assistant. Send me any rumor or claim, and I'll verify it against official sources.",
+        role: MessageRole.assistant,
+      ),
+    );
   }
 
   void _scrollToBottom() {
@@ -110,29 +113,33 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     if (query.isEmpty && _imageBytes == null) return;
 
     setState(() {
-      _messages.add(ChatMessage(
-        text: query.isEmpty ? "Checking this image..." : query,
-        role: MessageRole.user,
-        imageBytes: _imageBytes,
-      ));
+      _messages.add(
+        ChatMessage(
+          text: query.isEmpty ? "Checking this image..." : query,
+          role: MessageRole.user,
+          imageBytes: _imageBytes,
+        ),
+      );
       _isLoading = true;
     });
 
     final bytesToSend = _imageBytes;
-    final fileToUpload = _selectedImage != null ? File(_selectedImage!.path) : null;
+    final fileToUpload = _selectedImage != null
+        ? File(_selectedImage!.path)
+        : null;
 
     _textController.clear();
     setState(() {
       _selectedImage = null;
       _imageBytes = null;
     });
-    
+
     _scrollToBottom();
     FocusScope.of(context).unfocus();
 
     try {
       String? imageUrl;
-      
+
       // 1. Upload to Cloudinary if image exists
       if (fileToUpload != null) {
         final cloudinary = CloudinaryService();
@@ -143,20 +150,22 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
       final result = await widget.service.verifyClaim(
         text: query,
         imageBytes: bytesToSend, // Keep bytes as backup/fallback
-        imageUrl: imageUrl,      // Pass the new URL
+        imageUrl: imageUrl, // Pass the new URL
       );
 
       setState(() {
-        _messages.add(ChatMessage(
-          text: result.isAiGenerated == true 
-              ? "⚠️ Potential AI Manipulation Detected." 
-              : (imageUrl != null 
-                  ? "Verification complete. Image Link: $imageUrl" 
-                  : "Verification complete."),
-          role: MessageRole.assistant,
-          result: result,
-          imageUrl: imageUrl,
-        ));
+        _messages.add(
+          ChatMessage(
+            text: result.isAiGenerated == true
+                ? "⚠️ Potential AI Manipulation Detected."
+                : (imageUrl != null
+                      ? "Verification complete. Image Link: $imageUrl"
+                      : "Verification complete."),
+            role: MessageRole.assistant,
+            result: result,
+            imageUrl: imageUrl,
+          ),
+        );
       });
 
       // 3. Store result in Firestore
@@ -180,10 +189,12 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
       }
     } catch (e) {
       setState(() {
-        _messages.add(ChatMessage(
-          text: "Sorry, I encountered an error: ${e.toString()}",
-          role: MessageRole.assistant,
-        ));
+        _messages.add(
+          ChatMessage(
+            text: "Sorry, I encountered an error: ${e.toString()}",
+            role: MessageRole.assistant,
+          ),
+        );
       });
     } finally {
       setState(() {
@@ -198,7 +209,8 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     if (trimmedUrl.isEmpty) return;
 
     // Ensure URL has a scheme, otherwise url_launcher will fail
-    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+    if (!trimmedUrl.startsWith('http://') &&
+        !trimmedUrl.startsWith('https://')) {
       trimmedUrl = 'https://$trimmedUrl';
     }
 
@@ -219,9 +231,9 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     } catch (e) {
       debugPrint('Error launching URL: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -260,7 +272,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
               },
             ),
           ),
-          
+
           // Image Preview (if selected)
           if (_selectedImage != null)
             Container(
@@ -291,7 +303,11 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                           color: colorScheme.errorContainer,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.close, size: 16, color: colorScheme.onErrorContainer),
+                        child: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: colorScheme.onErrorContainer,
+                        ),
                       ),
                     ),
                   ),
@@ -301,15 +317,25 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
 
           // Chat Input Area
           Container(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).padding.bottom + 8),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              8,
+              16,
+              MediaQuery.of(context).padding.bottom + 8,
+            ),
             decoration: BoxDecoration(
               color: colorScheme.surface,
-              border: Border(top: BorderSide(color: colorScheme.outlineVariant, width: 0.5)),
+              border: Border(
+                top: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+              ),
             ),
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.add_a_photo_outlined, color: colorScheme.primary),
+                  icon: Icon(
+                    Icons.add_a_photo_outlined,
+                    color: colorScheme.primary,
+                  ),
                   onPressed: () => _showImageSourceActionSheet(context),
                 ),
                 Expanded(
@@ -317,14 +343,20 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                     controller: _textController,
                     decoration: InputDecoration(
                       hintText: 'Enter a rumor or pick an image...',
-                      hintStyle: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       filled: true,
                       fillColor: colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24.0),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 10,
+                      ),
                     ),
                     maxLines: null,
                     textInputAction: TextInputAction.send,
@@ -334,8 +366,11 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                 const SizedBox(width: 8),
                 IconButton.filled(
                   icon: const Icon(Icons.send, size: 20),
-                  onPressed: (_isLoading || (_textController.text.trim().isEmpty && _selectedImage == null)) 
-                      ? null 
+                  onPressed:
+                      (_isLoading ||
+                          (_textController.text.trim().isEmpty &&
+                              _selectedImage == null))
+                      ? null
                       : _submitFactCheck,
                 ),
               ],
@@ -381,13 +416,19 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Column(
-        crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
           Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.8,
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isUser ? colorScheme.primary : colorScheme.secondaryContainer,
+              color: isUser
+                  ? colorScheme.primary
+                  : colorScheme.secondaryContainer,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(20),
                 topRight: const Radius.circular(20),
@@ -425,7 +466,9 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                           return Container(
                             height: 200,
                             color: colorScheme.surfaceContainerHighest,
-                            child: const Center(child: CircularProgressIndicator()),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
                           );
                         },
                       ),
@@ -435,7 +478,9 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                   Text(
                     message.text,
                     style: TextStyle(
-                      color: isUser ? colorScheme.onPrimary : colorScheme.onSecondaryContainer,
+                      color: isUser
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSecondaryContainer,
                       fontSize: 15,
                     ),
                   ),
@@ -479,7 +524,10 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                 const SizedBox(width: 12),
                 Text(
                   'Verifying claim...',
-                  style: TextStyle(color: colorScheme.onSecondaryContainer, fontSize: 13),
+                  style: TextStyle(
+                    color: colorScheme.onSecondaryContainer,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -548,10 +596,14 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: result.isAiGenerated! ? Colors.red.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                  color: result.isAiGenerated!
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: result.isAiGenerated! ? Colors.red.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+                    color: result.isAiGenerated!
+                        ? Colors.red.withValues(alpha: 0.3)
+                        : Colors.blue.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
@@ -560,17 +612,25 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                     Row(
                       children: [
                         Icon(
-                          result.isAiGenerated! ? Icons.auto_awesome : Icons.verified_user,
+                          result.isAiGenerated!
+                              ? Icons.auto_awesome
+                              : Icons.verified_user,
                           size: 16,
-                          color: result.isAiGenerated! ? Colors.red : Colors.blue,
+                          color: result.isAiGenerated!
+                              ? Colors.red
+                              : Colors.blue,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          result.isAiGenerated! ? 'AI MANIPULATION SUSPECTED' : 'IMAGE AUTHENTICITY VERIFIED',
+                          result.isAiGenerated!
+                              ? 'AI MANIPULATION SUSPECTED'
+                              : 'IMAGE AUTHENTICITY VERIFIED',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: result.isAiGenerated! ? Colors.red : Colors.blue,
+                            color: result.isAiGenerated!
+                                ? Colors.red
+                                : Colors.blue,
                           ),
                         ),
                       ],
@@ -611,37 +671,46 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              ...result.references.map((url) => Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () => _launchURL(url),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.link, size: 16, color: colorScheme.primary),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  url,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: colorScheme.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+              ...result.references.map(
+                (url) => Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _launchURL(url),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 6.0,
+                          horizontal: 4.0,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.link,
+                              size: 16,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                url,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.primary,
+                                  decoration: TextDecoration.underline,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  )),
+                  ),
+                ),
+              ),
             ],
           ],
         ),
