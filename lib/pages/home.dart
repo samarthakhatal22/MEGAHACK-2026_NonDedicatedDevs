@@ -190,6 +190,9 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 8),
                           _buildPoliciesCard(context),
                           const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'Recent Scam Alerts'),
+                          const SizedBox(height: 8),
+                          _buildScamAlertsCard(context),
                           // ScamAlertSection renders its own "RECENT SCAM ALERTS" label
                           const ScamAlertSection(),
                           const SizedBox(height: 20),
