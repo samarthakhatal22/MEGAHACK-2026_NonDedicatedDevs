@@ -84,7 +84,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                   if (_errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(12),
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       child: Text(
                         _errorMessage!,
                         style: const TextStyle(color: Colors.red),

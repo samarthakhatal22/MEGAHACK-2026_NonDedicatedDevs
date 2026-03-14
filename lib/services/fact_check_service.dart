@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/fact_result.dart';
 
@@ -61,7 +61,7 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       return FactResult.fromJson(jsonMap);
 
     } catch (e) {
-      print('CRITICAL: FactCheckService Error: $e');
+      debugPrint('CRITICAL: FactCheckService Error: $e');
       throw Exception('Failed to verify information: $e');
     }
   }
