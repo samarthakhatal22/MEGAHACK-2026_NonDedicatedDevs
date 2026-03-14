@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
  
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -105,6 +108,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             isLast: true),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    _buildFactCheckHistory(context),
                     const SizedBox(height: 24),
                     _buildLogoutButton(context),
                     const SizedBox(height: 12),
@@ -508,6 +513,146 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
  
+  // ── Fact Check History ──────────────────────────────────────────────────────
+  
+  Widget _buildFactCheckHistory(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return const SizedBox.shrink();
+
+    return _buildSectionCard(
+      context,
+      title: 'Fact Check History',
+      children: [
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('fact_checks')
+              .where('userId', isEqualTo: user.uid)
+              .orderBy('timestamp', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Error loading history: ${snapshot.error}', 
+                  style: const TextStyle(fontSize: 12)),
+              );
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              );
+            }
+
+            final docs = snapshot.data?.docs ?? [];
+            
+            if (docs.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text('No fact checks yet', 
+                    style: TextStyle(fontSize: 13, color: Colors.grey)),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: docs.length > 5 ? 5 : docs.length, // Show last 5
+              separatorBuilder: (context, index) => Divider(
+                height: 1, 
+                color: colorScheme.outlineVariant,
+                indent: 14,
+                endIndent: 14,
+              ),
+              itemBuilder: (context, index) {
+                final data = docs[index].data() as Map<String, dynamic>;
+                final result = data['result'] as Map<String, dynamic>?;
+                final status = result?['status'] ?? 'Pending';
+                final query = data['queryText'] ?? 'Unknown query';
+                final imageUrl = data['imageUrl'] as String?;
+                final timestamp = data['timestamp'] as Timestamp?;
+                
+                String timeStr = 'Recent';
+                if (timestamp != null) {
+                  timeStr = DateFormat('MMM d, h:mm a').format(timestamp.toDate());
+                }
+
+                Color statusColor;
+                switch (status.toLowerCase()) {
+                  case 'true': statusColor = Colors.green; break;
+                  case 'false': statusColor = Colors.red; break;
+                  default: statusColor = Colors.orange;
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (imageUrl != null && imageUrl.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            imageUrl,
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
+                    ListTile(
+                      dense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      title: Text(
+                        query,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                      ),
+                      subtitle: Text(timeStr, style: const TextStyle(fontSize: 11)),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                        ),
+                        child: Text(
+                          status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
+        if (true) // Could be a 'See all' button
+          _buildNavTile(
+            context,
+            icon: Icons.history,
+            label: 'View full history',
+            isLast: true,
+            onTap: () {
+              // Navigate to a dedicated history page if needed
+            },
+          ),
+      ],
+    );
+  }
+
   // ── Logout Dialog ────────────────────────────────────────────────────────────
  
   void _showLogoutDialog(BuildContext context) {
