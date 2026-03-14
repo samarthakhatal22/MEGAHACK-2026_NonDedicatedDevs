@@ -195,18 +195,10 @@ class _HomePageState extends State<HomePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Good morning',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.primary,
-                  letterSpacing: 0.2,
-                ),
-              ),
+              
               const SizedBox(height: 1),
               Text(
-                'PolicyLens',
+                'Civic-Shield',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w500,

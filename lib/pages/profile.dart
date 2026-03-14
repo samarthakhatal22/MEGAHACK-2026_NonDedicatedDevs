@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 onTap: () {}),
                             _buildNavTile(context,
                                 icon: Icons.info_outline,
-                                label: 'About PolicyLens',
+                                label: 'About Civic-Shield',
                                 onTap: () {}),
                             _buildNavTile(context,
                                 icon: Icons.privacy_tip_outlined,
@@ -146,7 +146,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         _buildLogoutButton(streamContext),
                         const SizedBox(height: 12),
                         Text(
-                          'PolicyLens v1.0.0',
+                          'Civic-Shield v1.0.0',
                           style: TextStyle(
                             fontSize: 11,
                             color: colorScheme.onSurfaceVariant,
