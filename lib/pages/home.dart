@@ -149,7 +149,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
       ),
-
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
@@ -725,7 +724,6 @@ class _HomePageState extends State<HomePage> {
           setState(() => _selectedNavIndex = index);
         }
       },
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
           icon: Icon(Icons.home_outlined),
