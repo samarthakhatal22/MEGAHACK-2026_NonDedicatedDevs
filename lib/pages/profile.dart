@@ -711,9 +711,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: statusColor.withOpacity(0.5)),
+                          border: Border.all(color: statusColor.withValues(alpha: 0.5)),
                         ),
                         child: Text(
                           status.toUpperCase(),
