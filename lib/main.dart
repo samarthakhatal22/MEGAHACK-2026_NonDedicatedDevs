@@ -13,6 +13,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Force sign out on every app start as requested
+  await FirebaseAuth.instance.signOut();
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
