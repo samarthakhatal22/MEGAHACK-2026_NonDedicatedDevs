@@ -46,6 +46,7 @@ class _AuthenticatePageState extends State<AuthenticatePage> {
           .signInWithCredential(credential);
 
       // 5. Navigate to Home on success
+      // 5. Navigate to Home on success
       if (mounted && userCredential.user != null) {
         Navigator.pushReplacement(
           context,

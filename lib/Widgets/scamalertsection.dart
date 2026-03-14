@@ -80,7 +80,7 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(right: 4),
-                itemCount: alerts.length,
+                itemCount: alerts.length > 3 ? 3 : alerts.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) => _AlertCard(alert: alerts[index]),
               );
