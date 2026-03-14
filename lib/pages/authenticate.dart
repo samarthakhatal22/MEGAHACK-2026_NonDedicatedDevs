@@ -5,21 +5,35 @@ import 'email_sign_in.dart';
 import 'email_sign_up.dart';
 import 'home.dart';
 
-class AuthenticatePage extends StatelessWidget {
+class AuthenticatePage extends StatefulWidget {
   const AuthenticatePage({super.key});
 
-  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+  @override
+  State<AuthenticatePage> createState() => _AuthenticatePageState();
+}
+
+class _AuthenticatePageState extends State<AuthenticatePage> {
+  bool _isLoading = false;
+
+  // Optimized Google Sign In Method
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      // 1. Trigger the authentication flow
+      // 1. Trigger the Google authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
       if (googleUser == null) {
-        // The user canceled the sign-in
-        return null;
+        // User canceled the sign-in flow
+        setState(() => _isLoading = false);
+        return;
       }
 
       // 2. Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // 3. Create a new credential for Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
@@ -27,122 +41,134 @@ class AuthenticatePage extends StatelessWidget {
         idToken: googleAuth.idToken,
       );
 
-      // 4. Once signed in, return the UserCredential
-      return await FirebaseAuth.instance.signInWithCredential(credential);
+      // 4. Sign in to Firebase with the credential
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
 
+      // 5. Navigate to Home on success
+      if (mounted && userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Firebase Auth Error: ${e.message}')),
+          SnackBar(content: Text(e.message ?? 'Authentication failed.')),
         );
       }
-      return null;
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('General Error: $e')),
+          SnackBar(content: Text('An unexpected error occurred.')),
         );
       }
-      return null;
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.shield, size: 90, color: Colors.blue),
-            const SizedBox(height: 20),
-            const Text(
-              "Civic AI Navigator",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Fight Civic Misinformation\nAccess Government Services Easily",
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 50),
-            
-            // Google Sign In Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.login),
-                label: const Text("Continue with Google", style: TextStyle(fontSize: 16)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black87,
+      body: Center(
+        // Added Center for better layout
+        child: SingleChildScrollView(
+          // Added scroll view to prevent overflow on small screens
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.shield, size: 90, color: Colors.blue),
+              const SizedBox(height: 20),
+              const Text(
+                "Civic AI Navigator",
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Fight Civic Misinformation\nAccess Government Services Easily",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 50),
+
+              // Google Sign In Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.login),
+                  label: Text(
+                    _isLoading ? "Signing in..." : "Continue with Google",
+                  ),
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
                 ),
-                onPressed: () async {
-                  final userCredential = await signInWithGoogle(context);
-                  
-                  if (userCredential != null && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Successfully signed in as ${userCredential.user?.displayName}!')),
-                    );
-                    Navigator.pushAndRemoveUntil(
+              ),
+
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text("OR", style: TextStyle(color: Colors.grey)),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Email Sign In Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.email),
+                  label: const Text("Sign In with Email"),
+                  onPressed: () {
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomePage()),
-                      (Route<dynamic> route) => false,
+                      MaterialPageRoute(
+                        builder: (context) => const EmailSignInPage(),
+                      ),
                     );
-                  }
-                },
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            const Row(
-              children: [
-                Expanded(child: Divider()),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text("OR", style: TextStyle(color: Colors.grey)),
+                  },
                 ),
-                Expanded(child: Divider()),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Email Sign In Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.email),
-                label: const Text("Sign In with Email", style: TextStyle(fontSize: 16)),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const EmailSignInPage()),
-                  );
-                },
               ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Email Sign Up Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.person_add),
-                label: const Text("Sign Up with Email", style: TextStyle(fontSize: 16)),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const EmailSignUpPage()),
-                  );
-                },
+
+              const SizedBox(height: 16),
+
+              // Email Sign Up Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.person_add),
+                  label: const Text("Sign Up with Email"),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EmailSignUpPage(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
