@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'search_page.dart';
 import 'profile.dart';
-//import 'ScamAlert.dart';
+//import 'ScamAlert.dart'; // updated branch
 import 'package:civicshield/Widgets/scamalertsection.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
- 
+
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
 
@@ -70,9 +70,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
-  
-  final _factCheckService = FactCheckService(apiKey: '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');
- 
+  final _factCheckService = FactCheckService(
+    apiKey: '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',
+  );
+
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
     MetricModel(value: '47', label: 'Updated this month'),
@@ -120,7 +121,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: _selectedNavIndex == 2 
+        child: _selectedNavIndex == 2
             ? FactCheckChatPage(service: _factCheckService)
             : Column(
                 children: [
@@ -470,7 +471,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-/* Widget _buildScamAlertsCard(BuildContext context) {
+  /* Widget _buildScamAlertsCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -491,7 +492,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }*/             //static data for scam alerts
+  }*/ //static data for scam alerts
 
   Widget _buildAIActivityCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -565,22 +566,22 @@ class _HomePageState extends State<HomePage> {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
       onDestinationSelected: (index) {
-  if (index == 1) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SearchPage()),
-    );
-  } else if (index == 4) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ProfilePage()),
-    );
-  } else {
-    setState(() => _selectedNavIndex = index);
-  }
-},
+        if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SearchPage()),
+          );
+        } else if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfilePage()),
+          );
+        } else {
+          setState(() => _selectedNavIndex = index);
+        }
+      },
       // onDestinationSelected: (index) {
-     // setState(() => _selectedNavIndex = index);
+      // setState(() => _selectedNavIndex = index);
       // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
