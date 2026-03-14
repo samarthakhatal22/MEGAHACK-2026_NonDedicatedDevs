@@ -43,7 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-      builder: (context, userSnapshot) {
+      builder: (streamContext, userSnapshot) {
         final userData = userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
         final fullName = userData['fullName'] ?? user.displayName ?? 'New User';
         final email = userData['email'] ?? user.email ?? '';
@@ -109,7 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   setState(() => _emailAlerts = val),
                             ),
                             Consumer<ThemeProvider>(
-                              builder: (context, themeProvider, _) => _buildToggleTile(
+                              builder: (consumerContext, themeProvider, _) => _buildToggleTile(
                                 context,
                                 icon: Icons.dark_mode_outlined,
                                 label: 'Dark mode',
@@ -141,9 +141,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildFactCheckHistory(context),
+                        _buildFactCheckHistory(streamContext),
                         const SizedBox(height: 24),
-                        _buildLogoutButton(context),
+                        _buildLogoutButton(streamContext),
                         const SizedBox(height: 12),
                         Text(
                           'PolicyLens v1.0.0',
@@ -286,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('fact_checks').where('userId', isEqualTo: uid).snapshots(),
-      builder: (context, snapshot) {
+      builder: (statsContext, snapshot) {
         final factCheckCount = snapshot.data?.docs.length ?? 0;
         
         return Padding(
@@ -299,11 +299,11 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Row(
               children: [
-                _buildStatItem(context, '0', 'Searches'),
-                _buildStatDivider(context),
-                _buildStatItem(context, factCheckCount.toString(), 'Chats'),
-                _buildStatDivider(context),
-                _buildStatItem(context, '0', 'Saved'),
+                _buildStatItem(statsContext, '0', 'Searches'),
+                _buildStatDivider(statsContext),
+                _buildStatItem(statsContext, factCheckCount.toString(), 'Chats'),
+                _buildStatDivider(statsContext),
+                _buildStatItem(statsContext, '0', 'Saved'),
               ],
             ),
           ),
@@ -606,9 +606,8 @@ class _ProfilePageState extends State<ProfilePage> {
             stream: FirebaseFirestore.instance
                 .collection('fact_checks')
                 .where('userId', isEqualTo: user.uid)
-                .orderBy('timestamp', descending: true)
                 .snapshots(),
-            builder: (context, snapshot) {
+            builder: (historyContext, snapshot) {
             if (snapshot.hasError) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -626,8 +625,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
             final allDocs = snapshot.data?.docs ?? [];
             
-            // Client-side filtering for simplicity since Firebase doesn't support substring match well natively
-            final docs = allDocs.where((doc) {
+            // Client-side sorting by timestamp (descending)
+            final sortedDocs = allDocs.toList()..sort((a, b) {
+              final aTime = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+              final bTime = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+              if (aTime == null || bTime == null) return 0;
+              return bTime.compareTo(aTime); // Latest first
+            });
+
+            // Client-side filtering
+            final docs = sortedDocs.where((doc) {
               final data = doc.data() as Map<String, dynamic>;
               final queryText = (data['queryText'] ?? '').toString().toLowerCase();
               return queryText.contains(_searchQuery);
@@ -741,8 +748,11 @@ class _ProfilePageState extends State<ProfilePage> {
   // ── Logout Dialog ────────────────────────────────────────────────────────────
  
   void _showLogoutDialog(BuildContext context) {
+    debugPrint('Attempting to show logout dialog with context: $context');
     showDialog(
       context: context,
+      useRootNavigator: true, 
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
@@ -757,7 +767,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           FilledButton(
             onPressed: () async {
-              Navigator.pop(ctx);
+              debugPrint('Logout confirmed. Signing out...');
+              Navigator.of(ctx, rootNavigator: true).pop();
               await FirebaseAuth.instance.signOut();
             },
             style: FilledButton.styleFrom(

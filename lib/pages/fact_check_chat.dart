@@ -46,6 +46,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   XFile? _selectedImage;
   Uint8List? _imageBytes;
   bool _isLoading = false;
+  bool _historyLoading = true;
 
   Future<File?> pickImage() async {
     try {
@@ -92,6 +93,74 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
       text: "Hello! I'm your Civic Shield assistant. Send me any rumor or claim, and I'll verify it against official sources.",
       role: MessageRole.assistant,
     ));
+    _loadChatHistory();
+  }
+
+  Future<void> _loadChatHistory() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _historyLoading = false);
+      return;
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection("fact_checks")
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      // Sort client-side to avoid needing a composite index for timestamp
+      final docs = snapshot.docs.toList()
+        ..sort((a, b) {
+          final aTime = a['timestamp'] as Timestamp?;
+          final bTime = b['timestamp'] as Timestamp?;
+          if (aTime == null || bTime == null) return 0;
+          return aTime.compareTo(bTime);
+        });
+
+      final historicalMessages = docs.map((doc) {
+        final data = doc.data();
+        final resultData = data['result'] as Map<String, dynamic>?;
+        
+        FactResult? result;
+        if (resultData != null) {
+          result = FactResult(
+            status: resultData['status'] ?? 'Unknown',
+            score: (resultData['accuracy_percentage'] ?? 0).toInt(),
+            simpleDescription: resultData['explanation'] ?? '',
+            references: List<String>.from(resultData['references'] ?? []),
+            isAiGenerated: resultData['isAiGenerated'],
+            authenticityReason: resultData['authenticityReason'],
+          );
+        }
+
+        return [
+          ChatMessage(
+            text: data['queryText'] ?? '',
+            role: MessageRole.user,
+          ),
+          ChatMessage(
+            text: result?.isAiGenerated == true 
+                ? "⚠️ Potential AI Manipulation Detected." 
+                : (data['imageUrl'] != null 
+                    ? "Verification complete. Image Link: ${data['imageUrl']}" 
+                    : "Verification complete."),
+            role: MessageRole.assistant,
+            result: result,
+            imageUrl: data['imageUrl'],
+          ),
+        ];
+      }).expand((i) => i).toList();
+
+      setState(() {
+        _messages.addAll(historicalMessages);
+        _historyLoading = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('Error loading chat history: $e');
+      setState(() => _historyLoading = false);
+    }
   }
 
   void _scrollToBottom() {
@@ -173,11 +242,18 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
             'accuracy_percentage': result.score,
             'explanation': result.simpleDescription,
             'references': result.references,
+            'isAiGenerated': result.isAiGenerated,
+            'authenticityReason': result.authenticityReason,
           },
         });
         debugPrint('Fact check saved to Firestore successfully.');
       } catch (firestoreError) {
-        debugPrint('Error saving to Firestore: $firestoreError');
+        debugPrint('CRITICAL: Error saving to Firestore: $firestoreError');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save to history: $firestoreError')),
+          );
+        }
       }
     } catch (e) {
       setState(() {
@@ -245,22 +321,24 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length) {
-                  return _buildTypingIndicator();
-                }
-                final message = _messages[index];
-                return _buildChatBubble(message);
-              },
-            ),
-          ),
+      body: _historyLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length) {
+                      return _buildTypingIndicator();
+                    }
+                    final message = _messages[index];
+                    return _buildChatBubble(message);
+                  },
+                ),
+              ),
           
           // Image Preview (if selected)
           if (_selectedImage != null)
