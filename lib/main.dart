@@ -60,11 +60,8 @@ class MyApp extends StatelessWidget {
           return const AuthenticatePage();
         },
       ),
-    return  MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home:const AuthenticatePage(), //authentication UI
       routes: {
-        '/profile': (context) => const ProfilePage(), // ← keep this
+        '/profile': (context) => const ProfilePage(),
       },
     );
   }

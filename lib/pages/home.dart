@@ -1,7 +1,6 @@
 //wsdfggfdsa
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../file/screens/profile.dart';
 import 'scam_alert.dart';
 import 'search_page.dart';
 import 'profile.dart';
@@ -136,43 +135,11 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: _selectedNavIndex == 2
-        child: Column(
-            children: [
-              _buildTopAppBar(context, colorScheme, user, initials),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 12),
-                      _buildSearchBar(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'Overview', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildMetricsGrid(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'Recent policies', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildPoliciesCard(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildScamAlertsCard(context, colorScheme),
-                      const SizedBox(height: 20),
-                      _buildSectionLabel(context, 'AI activity', colorScheme),
-                      const SizedBox(height: 8),
-                      _buildAIActivityCard(context, colorScheme),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
         child: _selectedNavIndex == 2 
             ? FactCheckChatPage(service: _factCheckService)
             : Column(
                 children: [
-                  _buildTopAppBar(context),
+                  _buildTopAppBar(context, colorScheme, user, initials),
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -180,25 +147,24 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 12),
-                          _buildSearchBar(context),
+                          _buildSearchBar(context, colorScheme),
                           const SizedBox(height: 20),
-                          _buildSectionLabel(context, 'Overview'),
+                          _buildSectionLabel(context, 'Overview', colorScheme),
                           const SizedBox(height: 8),
-                          _buildMetricsGrid(context),
+                          _buildMetricsGrid(context, colorScheme),
                           const SizedBox(height: 20),
-                          _buildSectionLabel(context, 'Recent policies'),
+                          _buildSectionLabel(context, 'Recent policies', colorScheme),
                           const SizedBox(height: 8),
-                          _buildPoliciesCard(context),
+                          _buildPoliciesCard(context, colorScheme),
                           const SizedBox(height: 20),
-                          _buildSectionLabel(context, 'Recent Scam Alerts'),
+                          _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
                           const SizedBox(height: 8),
-                          _buildScamAlertsCard(context),
-                          // ScamAlertSection renders its own "RECENT SCAM ALERTS" label
+                          // Specific section from earlier requirements
                           const ScamAlertSection(),
                           const SizedBox(height: 20),
-                          _buildSectionLabel(context, 'AI activity'),
+                          _buildSectionLabel(context, 'AI activity', colorScheme),
                           const SizedBox(height: 8),
-                          _buildAIActivityCard(context),
+                          _buildAIActivityCard(context, colorScheme),
                           const SizedBox(height: 24),
                         ],
                       ),
@@ -206,9 +172,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
@@ -534,9 +497,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /* Widget _buildScamAlertsCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  /*
   Widget _buildScamAlertsCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
@@ -556,8 +517,8 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }*/ //static data for scam alerts
   }
+  */ //static data for scam alerts
 
   Widget _buildScamAlertListItem(
     BuildContext context,
@@ -784,29 +745,11 @@ class _HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ProfilePage()),
-        if (index == 4) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfilePage()),
           );
         } else {
           setState(() => _selectedNavIndex = index);
         }
       },
-  if (index == 1) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SearchPage()),
-    );
-  } else if (index == 4) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ProfilePage()),
-    );
-  } else {
-    setState(() => _selectedNavIndex = index);
-  }
-},
       // onDestinationSelected: (index) {
       // setState(() => _selectedNavIndex = index);
       // },
