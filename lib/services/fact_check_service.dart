@@ -4,11 +4,13 @@ import 'package:http/http.dart' as http;
 import '../models/fact_result.dart';
 
 class FactCheckService {
-  final String apiKey;
+  final String? apiKey;
   static const String _baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
-  FactCheckService({required this.apiKey});
+  FactCheckService({this.apiKey});
+
+  String get _effectiveApiKey => apiKey ?? const String.fromEnvironment('GROQ_API_KEY');
 
   Future<FactResult> verifyClaim({String? text, Uint8List? imageBytes, String? imageUrl}) async {
     try {
@@ -51,7 +53,7 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_effectiveApiKey',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
