@@ -14,123 +14,154 @@ class ProfilePage extends StatefulWidget {
  
 class _ProfilePageState extends State<ProfilePage> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   bool _emailAlerts = true;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
  
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
  
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(context),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildProfileHeader(context),
-                    const SizedBox(height: 8),
-                    _buildActivityStats(context),
-                    const SizedBox(height: 16),
-                    _buildSectionCard(
-                      context,
-                      title: 'Account',
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const Scaffold(body: Center(child: Text('Please log in')));
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      builder: (context, userSnapshot) {
+        final userData = userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
+        final fullName = userData['fullName'] ?? user.displayName ?? 'New User';
+        final email = userData['email'] ?? user.email ?? '';
+        final ministry = userData['ministry'] ?? 'Not specified';
+        final role = userData['role'] ?? 'User';
+
+        return Scaffold(
+          backgroundColor: colorScheme.surface,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildTopBar(context),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
                       children: [
-                        _buildInfoTile(context,
-                            icon: Icons.person_outline,
-                            label: 'Full name',
-                            value: 'Arjun Patel'),
-                        _buildInfoTile(context,
-                            icon: Icons.email_outlined,
-                            label: 'Email',
-                            value: 'arjun.patel@meity.gov.in'),
-                        _buildInfoTile(context,
-                            icon: Icons.business_outlined,
-                            label: 'Ministry',
-                            value: 'MeitY'),
-                        _buildInfoTile(context,
-                            icon: Icons.badge_outlined,
-                            label: 'Role',
-                            value: 'Policy Analyst',
-                            isLast: true),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSectionCard(
-                      context,
-                      title: 'Preferences',
-                      children: [
-                        _buildToggleTile(
+                        _buildProfileHeader(context, fullName, ministry, role),
+                        const SizedBox(height: 8),
+                        _buildActivityStats(context, user.uid),
+                        const SizedBox(height: 16),
+                        _buildSectionCard(
                           context,
-                          icon: Icons.notifications_outlined,
-                          label: 'Push notifications',
-                          value: _notificationsEnabled,
-                          onChanged: (val) =>
-                              setState(() => _notificationsEnabled = val),
+                          title: 'Account',
+                          children: [
+                            _buildInfoTile(context,
+                                icon: Icons.person_outline,
+                                label: 'Full name',
+                                value: fullName),
+                            _buildInfoTile(context,
+                                icon: Icons.email_outlined,
+                                label: 'Email',
+                                value: email),
+                            _buildInfoTile(context,
+                                icon: Icons.business_outlined,
+                                label: 'Ministry',
+                                value: ministry),
+                            _buildInfoTile(context,
+                                icon: Icons.badge_outlined,
+                                label: 'Role',
+                                value: role,
+                                isLast: true),
+                          ],
                         ),
-                        _buildToggleTile(
+                        const SizedBox(height: 12),
+                        _buildSectionCard(
                           context,
-                          icon: Icons.email_outlined,
-                          label: 'Email alerts',
-                          value: _emailAlerts,
-                          onChanged: (val) =>
-                              setState(() => _emailAlerts = val),
+                          title: 'Preferences',
+                          children: [
+                            _buildToggleTile(
+                              context,
+                              icon: Icons.notifications_outlined,
+                              label: 'Push notifications',
+                              value: _notificationsEnabled,
+                              onChanged: (val) =>
+                                  setState(() => _notificationsEnabled = val),
+                            ),
+                            _buildToggleTile(
+                              context,
+                              icon: Icons.email_outlined,
+                              label: 'Email alerts',
+                              value: _emailAlerts,
+                              onChanged: (val) =>
+                                  setState(() => _emailAlerts = val),
+                            ),
+                            Consumer<ThemeProvider>(
+                              builder: (context, themeProvider, _) => _buildToggleTile(
+                                context,
+                                icon: Icons.dark_mode_outlined,
+                                label: 'Dark mode',
+                                value: themeProvider.isDark,
+                                onChanged: (val) => themeProvider.toggleTheme(val),
+                                isLast: true,
+                              ),
+                            ),
+                          ],
                         ),
-                        Consumer<ThemeProvider>(
-                          builder: (context, themeProvider, _) => _buildToggleTile(
-                            context,
-                            icon: Icons.dark_mode_outlined,
-                            label: 'Dark mode',
-                            value: themeProvider.isDark,
-                            onChanged: (val) => themeProvider.toggleTheme(val),
-                            isLast: true,
+                        const SizedBox(height: 12),
+                        _buildSectionCard(
+                          context,
+                          title: 'App',
+                          children: [
+                            _buildNavTile(context,
+                                icon: Icons.help_outline,
+                                label: 'Help & support',
+                                onTap: () {}),
+                            _buildNavTile(context,
+                                icon: Icons.info_outline,
+                                label: 'About PolicyLens',
+                                onTap: () {}),
+                            _buildNavTile(context,
+                                icon: Icons.privacy_tip_outlined,
+                                label: 'Privacy policy',
+                                onTap: () {},
+                                isLast: true),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildFactCheckHistory(context),
+                        const SizedBox(height: 24),
+                        _buildLogoutButton(context),
+                        const SizedBox(height: 12),
+                        Text(
+                          'PolicyLens v1.0.0',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        const SizedBox(height: 24),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildSectionCard(
-                      context,
-                      title: 'App',
-                      children: [
-                        _buildNavTile(context,
-                            icon: Icons.help_outline,
-                            label: 'Help & support',
-                            onTap: () {}),
-                        _buildNavTile(context,
-                            icon: Icons.info_outline,
-                            label: 'About PolicyLens',
-                            onTap: () {}),
-                        _buildNavTile(context,
-                            icon: Icons.privacy_tip_outlined,
-                            label: 'Privacy policy',
-                            onTap: () {},
-                            isLast: true),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildFactCheckHistory(context),
-                    const SizedBox(height: 24),
-                    _buildLogoutButton(context),
-                    const SizedBox(height: 12),
-                    Text(
-                      'PolicyLens v1.0.0',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
  
@@ -168,8 +199,9 @@ class _ProfilePageState extends State<ProfilePage> {
  
   // ── Profile Header ───────────────────────────────────────────────────────────
  
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, String name, String ministry, String role) {
     final colorScheme = Theme.of(context).colorScheme;
+    final initials = name.trim().split(' ').where((e) => e.isNotEmpty).map((e) => e[0].toUpperCase()).take(2).join('');
  
     return Container(
       width: double.infinity,
@@ -182,7 +214,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 radius: 40,
                 backgroundColor: colorScheme.primaryContainer,
                 child: Text(
-                  'AP',
+                  initials.isEmpty ? '?' : initials,
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w500,
@@ -210,7 +242,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Arjun Patel',
+            name,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w500,
@@ -219,7 +251,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Policy Analyst · MeitY',
+            '$role · $ministry',
             style: TextStyle(
               fontSize: 13,
               color: colorScheme.onSurfaceVariant,
@@ -249,27 +281,34 @@ class _ProfilePageState extends State<ProfilePage> {
  
   // ── Activity Stats ───────────────────────────────────────────────────────────
  
-  Widget _buildActivityStats(BuildContext context) {
+  Widget _buildActivityStats(BuildContext context, String uid) {
     final colorScheme = Theme.of(context).colorScheme;
- 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(
-          children: [
-            _buildStatItem(context, '128', 'Searches'),
-            _buildStatDivider(context),
-            _buildStatItem(context, '34', 'Chats'),
-            _buildStatDivider(context),
-            _buildStatItem(context, '19', 'Saved'),
-          ],
-        ),
-      ),
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('fact_checks').where('userId', isEqualTo: uid).snapshots(),
+      builder: (context, snapshot) {
+        final factCheckCount = snapshot.data?.docs.length ?? 0;
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              children: [
+                _buildStatItem(context, '0', 'Searches'),
+                _buildStatDivider(context),
+                _buildStatItem(context, factCheckCount.toString(), 'Chats'),
+                _buildStatDivider(context),
+                _buildStatItem(context, '0', 'Saved'),
+              ],
+            ),
+          ),
+        );
+      }
     );
   }
  
@@ -528,13 +567,48 @@ class _ProfilePageState extends State<ProfilePage> {
       context,
       title: 'Fact Check History',
       children: [
-        StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('fact_checks')
-              .where('userId', isEqualTo: user.uid)
-              .orderBy('timestamp', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
+        // Search Bar
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search your history...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              isDense: true,
+              contentPadding: const EdgeInsets.all(12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outlineVariant),
+              ),
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ),
+          ),
+        ),
+        
+        if (_searchQuery.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(
+              child: Column(
+                children: [
+                   Icon(Icons.search_off_outlined, color: Colors.grey, size: 40),
+                   SizedBox(height: 8),
+                   Text('Type to search policy history', 
+                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+                ],
+              ),
+            ),
+          )
+        else
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('fact_checks')
+                .where('userId', isEqualTo: user.uid)
+                .orderBy('timestamp', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -550,7 +624,14 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             }
 
-            final docs = snapshot.data?.docs ?? [];
+            final allDocs = snapshot.data?.docs ?? [];
+            
+            // Client-side filtering for simplicity since Firebase doesn't support substring match well natively
+            final docs = allDocs.where((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final queryText = (data['queryText'] ?? '').toString().toLowerCase();
+              return queryText.contains(_searchQuery);
+            }).toList();
             
             if (docs.isEmpty) {
               return const Padding(
