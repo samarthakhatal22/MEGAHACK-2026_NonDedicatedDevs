@@ -402,7 +402,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
         return Transform.scale(
           scale: 0.8 + (0.2 * value),
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: Column(
