@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../one/providers/theme_provider.dart';
  
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -77,14 +79,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           onChanged: (val) =>
                               setState(() => _emailAlerts = val),
                         ),
-                        _buildToggleTile(
-                          context,
-                          icon: Icons.dark_mode_outlined,
-                          label: 'Dark mode',
-                          value: _darkModeEnabled,
-                          onChanged: (val) =>
-                              setState(() => _darkModeEnabled = val),
-                          isLast: true,
+                        Consumer<ThemeProvider>(
+                          builder: (context, themeProvider, _) => _buildToggleTile(
+                            context,
+                            icon: Icons.dark_mode_outlined,
+                            label: 'Dark mode',
+                            value: themeProvider.isDark,
+                            onChanged: (val) => themeProvider.toggleTheme(val),
+                            isLast: true,
+                          ),
                         ),
                       ],
                     ),
@@ -606,6 +609,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ),
+
                     ListTile(
                       dense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
@@ -671,8 +675,9 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
+              await FirebaseAuth.instance.signOut();
             },
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF8C1D18),
@@ -683,5 +688,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+
 }
  
