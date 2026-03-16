@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/scamalert.dart';
 import '../services/cybernews.dart';
-import '../Widgets/scamalertsection.dart';
 
 class ScamsPage extends StatefulWidget {
   const ScamsPage({super.key});
