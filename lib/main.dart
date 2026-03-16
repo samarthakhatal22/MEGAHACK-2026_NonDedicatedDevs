@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: themeProvider.themeMode, // controlled by toggle in profile
+      themeMode: themeProvider.themeMode,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
