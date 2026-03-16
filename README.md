@@ -1,3 +1,4 @@
+ 
 <div align="center">
 
 <img src="assets/app_icon.png" alt="CivicShield Logo" width="100"/>
