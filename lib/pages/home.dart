@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-
-import 'fact_check_chat.dart';
-import 'profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../file/screens/profile.dart';
 import 'scam_alert.dart';
 import 'search_page.dart';
-import '../services/fact_check_service.dart';
+import 'profile.dart';
+import 'ScamAlert.dart';
 
+import 'fact_check_chat.dart';
+import '../services/fact_check_service.dart';
+ 
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
 
@@ -46,20 +49,16 @@ enum PolicyStatus { active, draft, conflict, review }
 class MetricModel {
   final String value;
   final String label;
-  final IconData icon;
-  final Color backgroundColor;
-  final Color valueColor;
-  final Color labelColor;
-  final Color iconColor;
+  final Color? backgroundColor;
+  final Color? valueColor;
+  final Color? labelColor;
 
   const MetricModel({
     required this.value,
     required this.label,
-    required this.icon,
-    required this.backgroundColor,
-    required this.valueColor,
-    required this.labelColor,
-    required this.iconColor,
+    this.backgroundColor,
+    this.valueColor,
+    this.labelColor,
   });
 }
 
@@ -73,10 +72,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
-  final _factCheckService = FactCheckService(
-    apiKey: const String.fromEnvironment('GROQ_API_KEY'),
-  );
-
+  
+  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
+  final _factCheckService = FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
+ 
   final List<MetricModel> _metrics = const [
     MetricModel(
       value: '1,284',
@@ -145,12 +144,55 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Extract user initials for avatar
+    final user = FirebaseAuth.instance.currentUser;
+    String initials = "U";
+    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+      List<String> names = user.displayName!.split(" ");
+      if (names.length >= 2) {
+        initials = "${names[0][0]}${names[1][0]}".toUpperCase();
+      } else {
+        initials = names[0][0].toUpperCase();
+      }
+    }
+
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: _selectedNavIndex == 2
+        child: Column(
+            children: [
+              _buildTopAppBar(context, colorScheme, user, initials),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      _buildSearchBar(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'Overview', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildMetricsGrid(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'Recent policies', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildPoliciesCard(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildScamAlertsCard(context, colorScheme),
+                      const SizedBox(height: 20),
+                      _buildSectionLabel(context, 'AI activity', colorScheme),
+                      const SizedBox(height: 8),
+                      _buildAIActivityCard(context, colorScheme),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+        child: _selectedNavIndex == 2 
             ? FactCheckChatPage(service: _factCheckService)
             : Column(
                 children: [
@@ -163,34 +205,17 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           const SizedBox(height: 12),
                           _buildSearchBar(context),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           _buildSectionLabel(context, 'Overview'),
                           const SizedBox(height: 8),
                           _buildMetricsGrid(context),
                           const SizedBox(height: 20),
-                          _buildSectionHeader(
-                            context,
-                            'Recent scam alerts',
-                            onViewAll: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const ScamAlerts(),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          _buildScamAlertsCard(context),
-                          const SizedBox(height: 20),
-                          _buildSectionHeader(
-                            context,
-                            'Recent policies',
-                            onViewAll: () {},
-                          ),
+                          _buildSectionLabel(context, 'Recent policies'),
                           const SizedBox(height: 8),
                           _buildPoliciesCard(context),
                           const SizedBox(height: 20),
+                          _buildSectionLabel(context, 'AI activity'),
+                          const SizedBox(height: 8),
                           _buildAIActivityCard(context),
                           const SizedBox(height: 24),
                         ],
@@ -243,25 +268,41 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
+          
+          // Added a popup menu to the avatar to allow logout
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await FirebaseAuth.instance.signOut();
+              }
             },
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: colorScheme.primaryContainer,
-              child: Text(
-                'AP',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.onPrimaryContainer,
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Sign out'),
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
-            ),
+            ],
+            child: user?.photoURL != null 
+              ? CircleAvatar(
+                  radius: 18,
+                  backgroundImage: NetworkImage(user!.photoURL!),
+                )
+              : CircleAvatar(
+                  radius: 18,
+                  backgroundColor: colorScheme.primaryContainer,
+                  child: Text(
+                    initials,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
           ),
         ],
       ),
@@ -631,7 +672,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${policy.ministry} - ${policy.date}',
+                    '${policy.ministry} · ${policy.date}',
                     style: TextStyle(
                       fontSize: 11,
                       color: colorScheme.onSurfaceVariant,
@@ -709,9 +750,174 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildAIActivityCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildScamAlertsCard(BuildContext context, ColorScheme colorScheme) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+      ),
+      color: colorScheme.surface,
+      child: Column(
+        children: [
+          ...scamAlertsData.asMap().entries.map((entry) {
+            final index = entry.key;
+            final alert = entry.value;
+            final isLast = index == scamAlertsData.length - 1;
+            return _buildScamAlertListItem(context, alert, isLast, colorScheme);
+          }),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildScamAlertListItem(
+    BuildContext context,
+    Map<String, dynamic> alert,
+    bool isLast,
+    ColorScheme colorScheme,
+  ) {
+    final riskLevel = alert['risk_level'] as String;
+    
+    Color riskColor;
+    Color riskBg;
+    if (riskLevel == 'High') {
+      riskColor = const Color(0xFF8C1D18);
+      riskBg = const Color(0xFFFCDAD7);
+    } else if (riskLevel == 'Medium') {
+      riskColor = const Color(0xFF7A4F00);
+      riskBg = const Color(0xFFFFF0C5);
+    } else {
+      riskColor = const Color(0xFF1A5E20);
+      riskBg = const Color(0xFFD7EDCA);
+    }
+
+    return InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(alert['title']),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Why it is fake:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(alert['why_it_is_fake']),
+                  const SizedBox(height: 12),
+                  const Text('How to stay safe:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(alert['how_to_stay_safe']),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      },
+      borderRadius: isLast
+          ? const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            )
+          : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: riskBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                size: 20,
+                color: riskColor,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    alert['title'],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    alert['short_description'],
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          alert['platform_spread'],
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          alert['scam_type'],
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAIActivityCard(BuildContext context, ColorScheme colorScheme) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -759,8 +965,8 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            FilledButton(
-              onPressed: () => setState(() => _selectedNavIndex = 2),
+            FilledButton.tonal(
+              onPressed: () {},
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
@@ -786,17 +992,29 @@ class _HomePageState extends State<HomePage> {
         if (index == 1) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const SearchPage()),
-          );
-        } else if (index == 3) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfilePage()),
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
           );
         } else {
           setState(() => _selectedNavIndex = index);
         }
       },
+  if (index == 1) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchPage()),
+    );
+  } else if (index == 4) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfilePage()),
+    );
+  } else {
+    setState(() => _selectedNavIndex = index);
+  }
+},
+      // onDestinationSelected: (index) {
+     // setState(() => _selectedNavIndex = index);
+      // },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
@@ -822,6 +1040,38 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
+}
+
+class PolicyModel {
+  final String title;
+  final String ministry;
+  final String date;
+  final PolicyStatus status;
+
+  const PolicyModel({
+    required this.title,
+    required this.ministry,
+    required this.date,
+    required this.status,
+  });
+}
+
+enum PolicyStatus { active, draft, conflict, review }
+
+class MetricModel {
+  final String value;
+  final String label;
+  final Color? backgroundColor;
+  final Color? valueColor;
+  final Color? labelColor;
+
+  const MetricModel({
+    required this.value,
+    required this.label,
+    this.backgroundColor,
+    this.valueColor,
+    this.labelColor,
+  });
 }
 
 class _StatusConfig {

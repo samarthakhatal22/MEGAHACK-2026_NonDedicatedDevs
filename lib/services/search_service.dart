@@ -56,7 +56,7 @@ class WebResult {
 }
 
 class SearchService {
-  static const String apiKey = "AIzaSyCzOp8HFnKz5MuZVS305s0hmMIT1GwQ5lo";
+  static const String apiKey = "AIzaSyC2_c4mDjUGo8ZW8P-7GhJHpJ1oQcoj_4c";
   static const String cx = "55e6560ed443a486a";
   static const String policySearchBaseUrl =
       'https://your-api-endpoint.com/search';
@@ -148,24 +148,26 @@ class SearchService {
 
   Future<List<WebResult>> searchWeb(String query) async {
     try {
-      final url = Uri.parse(
-        "https://www.googleapis.com/customsearch/v1?key=$apiKey&cx=$cx&q=$query",
+      final url = Uri.https(
+        'www.googleapis.com',
+        '/customsearch/v1',
+        {
+          'key': apiKey,
+          'cx': cx,
+          'q': query,
+        },
       );
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         if (data["items"] == null) return [];
-
         return (data["items"] as List)
             .map((item) => WebResult.fromJson(item))
             .toList();
       } else {
-        throw Exception(
-          "Google search failed with status ${response.statusCode}",
-        );
+        throw Exception("Google search failed with status ${response.statusCode}");
       }
     } catch (e) {
       throw Exception("Web search error: $e");
