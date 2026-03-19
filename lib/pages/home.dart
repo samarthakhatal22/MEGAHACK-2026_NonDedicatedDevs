@@ -6,6 +6,8 @@ import 'search_page.dart';
 import 'profile.dart';
 import 'ScamAlert.dart';
 
+import 'package:civicshield/Widgets/scamalertsection.dart';
+import 'scams_page.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
  
@@ -220,10 +222,52 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 24),
                         ],
                       ),
+        child: IndexedStack(
+          index: _selectedNavIndex,
+          children: [
+            // Home (Index 0)
+            Column(
+              children: [
+                _buildTopAppBar(context, colorScheme, user, initials),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 12),
+                        _buildSearchBar(context, colorScheme),
+                        const SizedBox(height: 20),
+                        _buildSectionLabel(context, 'Overview', colorScheme),
+                        const SizedBox(height: 8),
+                        _buildMetricsGrid(context, colorScheme),
+                        const SizedBox(height: 20),
+                        _buildSectionLabel(context, 'Recent policies', colorScheme),
+                        const SizedBox(height: 8),
+                        _buildPoliciesCard(context, colorScheme),
+                        const SizedBox(height: 20),
+                        _buildSectionLabel(context, 'Recent Scam Alerts', colorScheme),
+                        const SizedBox(height: 8),
+                        const ScamAlertSection(),
+                        const SizedBox(height: 20),
+                        _buildSectionLabel(context, 'AI activity', colorScheme),
+                        const SizedBox(height: 8),
+                        _buildAIActivityCard(context, colorScheme),
+                        const SizedBox(height: 24),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
+            // Scams (Index 1)
+            const ScamsPage(),
+            // Profile (Index 2)
+            const ProfilePage(),
+            // Fact Check (Index 3)
+            FactCheckChatPage(service: _factCheckService),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
@@ -239,18 +283,10 @@ class _HomePageState extends State<HomePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Good morning',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.primary,
-                  letterSpacing: 0.2,
-                ),
-              ),
+              
               const SizedBox(height: 1),
               Text(
-                'PolicyLens',
+                'Civic-Shield',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w500,
@@ -401,13 +437,13 @@ class _HomePageState extends State<HomePage> {
         crossAxisCount: 2,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 1.6,
+        childAspectRatio: 2.2, // Increased from 1.6 to make it shorter
       ),
       itemCount: _metrics.length,
       itemBuilder: (context, index) {
         final metric = _metrics[index];
         return Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), // Reduced vertical padding
           decoration: BoxDecoration(
             color: metric.backgroundColor,
             borderRadius: BorderRadius.circular(16),
@@ -421,17 +457,19 @@ class _HomePageState extends State<HomePage> {
               Text(
                 metric.value,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 20, // Slightly smaller font
                   fontWeight: FontWeight.w500,
                   color: metric.valueColor,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1), // Reduced height
               Text(
                 metric.label,
                 style: TextStyle(
                   fontSize: 11,
                   color: metric.labelColor,
+                  fontSize: 10, // Slightly smaller font
+                  color: metric.labelColor ?? colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -967,6 +1005,9 @@ class _HomePageState extends State<HomePage> {
             ),
             FilledButton.tonal(
               onPressed: () {},
+              onPressed: () {
+                setState(() => _selectedNavIndex = 3);
+              },
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
@@ -1015,6 +1056,8 @@ class _HomePageState extends State<HomePage> {
       // onDestinationSelected: (index) {
      // setState(() => _selectedNavIndex = index);
       // },
+        setState(() => _selectedNavIndex = index);
+      },
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
@@ -1031,11 +1074,19 @@ class _HomePageState extends State<HomePage> {
           icon: Icon(Icons.fact_check_outlined),
           selectedIcon: Icon(Icons.fact_check),
           label: 'Fact Check',
+          icon: Icon(Icons.security_outlined),
+          selectedIcon: Icon(Icons.security),
+          label: 'Scams',
         ),
         NavigationDestination(
           icon: Icon(Icons.person_outline),
           selectedIcon: Icon(Icons.person),
           label: 'Profile',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.verified_outlined),
+          selectedIcon: Icon(Icons.verified),
+          label: 'Fact Check',
         ),
       ],
     );
