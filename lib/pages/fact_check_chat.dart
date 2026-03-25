@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' show ImageFilter;
 import '../services/fact_check_service.dart';
 import '../services/cloudinary_service.dart';
 import '../models/fact_result.dart';
@@ -45,6 +46,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   XFile? _selectedImage;
   Uint8List? _imageBytes;
   bool _isLoading = false;
+  bool _historyLoading = true;
 
   Future<File?> pickImage() async {
     try {
@@ -87,13 +89,78 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   void initState() {
     super.initState();
     // Welcome message
-    _messages.add(
-      ChatMessage(
-        text:
-            "Hello! I'm your Civic Shield assistant. Send me any rumor or claim, and I'll verify it against official sources.",
-        role: MessageRole.assistant,
-      ),
-    );
+    _messages.add(ChatMessage(
+      text: "Hello! I'm your Civic Shield assistant. Send me any rumor or claim, and I'll verify it against official sources.",
+      role: MessageRole.assistant,
+    ));
+    _loadChatHistory();
+  }
+
+  Future<void> _loadChatHistory() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _historyLoading = false);
+      return;
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection("fact_checks")
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      // Sort client-side to avoid needing a composite index for timestamp
+      final docs = snapshot.docs.toList()
+        ..sort((a, b) {
+          final aTime = a['timestamp'] as Timestamp?;
+          final bTime = b['timestamp'] as Timestamp?;
+          if (aTime == null || bTime == null) return 0;
+          return aTime.compareTo(bTime);
+        });
+
+      final historicalMessages = docs.map((doc) {
+        final data = doc.data();
+        final resultData = data['result'] as Map<String, dynamic>?;
+        
+        FactResult? result;
+        if (resultData != null) {
+          result = FactResult(
+            status: resultData['status'] ?? 'Unknown',
+            score: (resultData['accuracy_percentage'] ?? 0).toInt(),
+            simpleDescription: resultData['explanation'] ?? '',
+            references: List<String>.from(resultData['references'] ?? []),
+            isAiGenerated: resultData['isAiGenerated'],
+            authenticityReason: resultData['authenticityReason'],
+          );
+        }
+
+        return [
+          ChatMessage(
+            text: data['queryText'] ?? '',
+            role: MessageRole.user,
+          ),
+          ChatMessage(
+            text: result?.isAiGenerated == true 
+                ? "⚠️ Potential AI Manipulation Detected." 
+                : (data['imageUrl'] != null 
+                    ? "Verification complete. Image Link: ${data['imageUrl']}" 
+                    : "Verification complete."),
+            role: MessageRole.assistant,
+            result: result,
+            imageUrl: data['imageUrl'],
+          ),
+        ];
+      }).expand((i) => i).toList();
+
+      setState(() {
+        _messages.addAll(historicalMessages);
+        _historyLoading = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('Error loading chat history: $e');
+      setState(() => _historyLoading = false);
+    }
   }
 
   void _scrollToBottom() {
@@ -181,11 +248,18 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
             'accuracy_percentage': result.score,
             'explanation': result.simpleDescription,
             'references': result.references,
+            'isAiGenerated': result.isAiGenerated,
+            'authenticityReason': result.authenticityReason,
           },
         });
         debugPrint('Fact check saved to Firestore successfully.');
       } catch (firestoreError) {
-        debugPrint('Error saving to Firestore: $firestoreError');
+        debugPrint('CRITICAL: Error saving to Firestore: $firestoreError');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save to history: $firestoreError')),
+          );
+        }
       }
     } catch (e) {
       setState(() {
@@ -256,23 +330,25 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length) {
-                  return _buildTypingIndicator();
-                }
-                final message = _messages[index];
-                return _buildChatBubble(message);
-              },
-            ),
-          ),
-
+      body: _historyLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length) {
+                      return _buildTypingIndicator();
+                    }
+                    final message = _messages[index];
+                    return _buildChatBubble(message);
+                  },
+                ),
+              ),
+          
           // Image Preview (if selected)
           if (_selectedImage != null)
             Container(
@@ -317,63 +393,59 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
 
           // Chat Input Area
           Container(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              8,
-              16,
-              MediaQuery.of(context).padding.bottom + 8,
-            ),
+            padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 12),
             decoration: BoxDecoration(
               color: colorScheme.surface,
-              border: Border(
-                top: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.add_a_photo_outlined,
-                    color: colorScheme.primary,
-                  ),
-                  onPressed: () => _showImageSourceActionSheet(context),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      hintText: 'Enter a rumor or pick an image...',
-                      hintStyle: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24.0),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20.0,
-                        vertical: 10,
-                      ),
-                    ),
-                    maxLines: null,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _submitFactCheck(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  icon: const Icon(Icons.send, size: 20),
-                  onPressed:
-                      (_isLoading ||
-                          (_textController.text.trim().isEmpty &&
-                              _selectedImage == null))
-                      ? null
-                      : _submitFactCheck,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
                 ),
               ],
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.add_a_photo_outlined, color: colorScheme.primary, size: 22),
+                    onPressed: () => _showImageSourceActionSheet(context),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      style: const TextStyle(fontSize: 15),
+                      decoration: InputDecoration(
+                        hintText: 'Enter a rumor or pick an image...',
+                        hintStyle: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
+                      ),
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _submitFactCheck(),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  ScaleTransition(
+                    scale: AlwaysStoppedAnimation(_isLoading ? 0.8 : 1.0),
+                    child: IconButton.filled(
+                      icon: _isLoading 
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.send_rounded, size: 20),
+                      onPressed: (_isLoading || (_textController.text.trim().isEmpty && _selectedImage == null)) 
+                          ? null 
+                          : _submitFactCheck,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -413,86 +485,107 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     final isUser = message.role == MessageRole.user;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: isUser
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.8,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isUser
-                  ? colorScheme.primary
-                  : colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: Radius.circular(isUser ? 20 : 4),
-                bottomRight: Radius.circular(isUser ? 4 : 20),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.8 + (0.2 * value),
+          child: Opacity(
+            opacity: value.clamp(0.0, 1.0),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(isUser ? 20 : 4),
+                      bottomRight: Radius.circular(isUser ? 4 : 20),
+                    ),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isUser 
+                            ? colorScheme.primary.withOpacity(0.9) 
+                            : colorScheme.secondaryContainer.withOpacity(0.7),
+                          border: Border.all(
+                            color: isUser 
+                              ? Colors.white.withOpacity(0.2) 
+                              : colorScheme.outline.withOpacity(0.1),
+                          ),
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(20),
+                            topRight: const Radius.circular(20),
+                            bottomLeft: Radius.circular(isUser ? 20 : 4),
+                            bottomRight: Radius.circular(isUser ? 4 : 20),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (message.imageBytes != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.memory(
+                                    message.imageBytes!,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            if (message.imageUrl != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    message.imageUrl!,
+                                    height: 200,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        height: 200,
+                                        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                        child: const Center(child: CircularProgressIndicator()),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            if (message.text.isNotEmpty)
+                              Text(
+                                message.text,
+                                style: TextStyle(
+                                  color: isUser ? colorScheme.onPrimary : colorScheme.onSecondaryContainer,
+                                  fontSize: 15,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (message.result != null) ...[
+                    const SizedBox(height: 8),
+                    _buildResultCard(message.result!),
+                  ],
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (message.imageBytes != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.memory(
-                        message.imageBytes!,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                if (message.imageUrl != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        message.imageUrl!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            height: 200,
-                            color: colorScheme.surfaceContainerHighest,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                if (message.text.isNotEmpty)
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: isUser
-                          ? colorScheme.onPrimary
-                          : colorScheme.onSecondaryContainer,
-                      fontSize: 15,
-                    ),
-                  ),
-              ],
-            ),
           ),
-          if (message.result != null) ...[
-            const SizedBox(height: 8),
-            _buildResultCard(message.result!),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 
