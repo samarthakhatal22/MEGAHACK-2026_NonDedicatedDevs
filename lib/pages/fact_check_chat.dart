@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui' show ImageFilter;
 import '../services/fact_check_service.dart';
 import '../services/cloudinary_service.dart';
@@ -414,7 +415,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.add_a_photo_outlined, color: colorScheme.primary, size: 22),
+                    icon: Icon(Icons.camera_alt, color: colorScheme.primary, size: 22),
                     onPressed: () => _showImageSourceActionSheet(context),
                   ),
                   Expanded(
@@ -663,23 +664,44 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
           children: [
             Row(
               children: [
-                Icon(statusIcon, color: statusColor, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  result.status.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
+                Icon(statusIcon, color: statusColor, size: 32),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      result.status.toUpperCase(),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                      ),
+                    ),
+                    Text(
+                      'VERDICT',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor.withOpacity(0.6),
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
                 const Spacer(),
-                Text(
-                  '${result.score}%',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                    fontSize: 18,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${result.score}%',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w800,
+                      color: statusColor,
+                      fontSize: 24,
+                    ),
                   ),
                 ),
               ],

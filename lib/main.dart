@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'one/providers/theme_provider.dart';
 import 'pages/authenticate.dart';
-import 'pages/home.dart';
+import 'pages/main_navigation.dart';
 import 'pages/profile.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,28 +29,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return MaterialApp(
       title: 'CivicShield',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
-      themeMode: themeProvider.themeMode, // controlled by toggle in profile
+      theme: AppTheme.lightTheme,
       routes: {
-        '/profile': (context) => const ProfilePage(), // keep named route as fallback
+        '/profile': (context) => const ProfilePage(),
       },
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
@@ -60,12 +45,11 @@ class MyApp extends StatelessWidget {
             );
           }
           if (snapshot.hasData) {
-            return const HomePage();
+            return const MainNavigation();
           }
           return const AuthenticatePage();
         },
       ),
-
     );
   }
 }

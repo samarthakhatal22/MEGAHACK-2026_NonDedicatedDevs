@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/scamalert.dart';
 import '../services/cybernews.dart';
-import '../Widgets/scamalertsection.dart';
 
 class ScamsPage extends StatefulWidget {
   const ScamsPage({super.key});
@@ -29,10 +28,8 @@ class _ScamsPageState extends State<ScamsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: const Text('Recent Scam Alerts'),
         actions: [
