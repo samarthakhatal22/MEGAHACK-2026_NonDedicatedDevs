@@ -667,6 +667,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 final query = data['queryText'] ?? 'Unknown query';
                 final imageUrl = data['imageUrl'] as String?;
                 final timestamp = data['timestamp'] as Timestamp?;
+
+                // CHANGED: Null-safe reads for new fields (Change 4)
+                final socialSources = result?['socialSourcesChecked'] as List<dynamic>? ?? [];
+                final deepAnalysis = data['deepAnalysis'] as String? ?? '';
                 
                 String timeStr = 'Recent';
                 if (timestamp != null) {
