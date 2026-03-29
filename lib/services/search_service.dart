@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class PolicyResult {
@@ -48,18 +49,45 @@ class WebResult {
 
   factory WebResult.fromJson(Map<String, dynamic> json) {
     return WebResult(
-      title: json['title'] ?? '',
-      link: json['link'] ?? '',
-      snippet: json['snippet'] ?? '',
+      title: (json['title'] ?? '').toString(),
+      link: (json['url'] ?? json['link'] ?? '').toString(),
+      snippet: (json['description'] ?? json['snippet'] ?? '').toString(),
     );
   }
 }
 
 class SearchService {
-  static const String apiKey = "AIzaSyC2_c4mDjUGo8ZW8P-7GhJHpJ1oQcoj_4c";
-  static const String cx = "55e6560ed443a486a";
+  static const String apiKey = String.fromEnvironment(
+    'API_KEY',
+    defaultValue: '',
+  );
+  static const String policyApiKey = String.fromEnvironment(
+    'POLICY_API_KEY',
+    defaultValue: '',
+  );
+  static const String policyApiKeyHeader = String.fromEnvironment(
+    'POLICY_API_KEY_HEADER',
+    defaultValue: 'X-API-KEY',
+  );
   static const String policySearchBaseUrl =
-      'https://your-api-endpoint.com/search';
+      String.fromEnvironment(
+    'POLICY_SEARCH_BASE_URL',
+    defaultValue: 'https://your-api-endpoint.com/search',
+  );
+  static const String newsApiKey = String.fromEnvironment(
+    'NEWS_API_KEY',
+    defaultValue: '',
+  );
+
+  String get _effectivePolicyApiKey {
+    if (policyApiKey.isNotEmpty) return policyApiKey;
+    return apiKey;
+  }
+
+  String get _effectiveNewsApiKey {
+    if (newsApiKey.isNotEmpty) return newsApiKey;
+    return apiKey;
+  }
 
   Future<List<PolicyResult>> searchPolicies({
     String? query,
@@ -70,6 +98,18 @@ class SearchService {
     try {
       final normalizedQuery = (query ?? '').trim();
       if (normalizedQuery.isEmpty) return [];
+
+      if (policySearchBaseUrl.contains('your-api-endpoint.com')) {
+        debugPrint(
+          'POLICY_SEARCH_BASE_URL is not configured. Falling back to NewsAPI for search results.',
+        );
+        return _searchPoliciesViaNewsApi(
+          normalizedQuery,
+          ministry: ministry,
+          status: status,
+          year: year,
+        );
+      }
 
       final queryParams = <String, String>{'q': normalizedQuery};
       if (ministry != null && ministry.trim().isNotEmpty && ministry != 'All') {
@@ -85,12 +125,25 @@ class SearchService {
       final url = Uri.parse(
         policySearchBaseUrl,
       ).replace(queryParameters: queryParams);
-      final response = await http.get(url);
+
+      final headers = <String, String>{'Accept': 'application/json'};
+      final effectivePolicyApiKey = _effectivePolicyApiKey;
+      if (effectivePolicyApiKey.isNotEmpty) {
+        headers[policyApiKeyHeader] = effectivePolicyApiKey;
+      } else {
+        debugPrint(
+          'No API key found. Add --dart-define=API_KEY=... (or POLICY_API_KEY for policy-only).',
+        );
+      }
+
+      debugPrint('Policy request URL: $url');
+      final response = await http.get(url, headers: headers);
+      debugPrint('Policy response status: ${response.statusCode}');
+      debugPrint('Policy response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
 
-        // Support both plain arrays and wrapped payloads from common APIs.
         final List<dynamic> rawItems = switch (decoded) {
           List<dynamic> list => list,
           Map<String, dynamic> map when map['results'] is List<dynamic> =>
@@ -111,11 +164,14 @@ class SearchService {
           status: status,
           year: year,
         );
-      } else {
-        throw Exception("API search failed with status ${response.statusCode}");
       }
+
+      throw Exception(
+        'Policy search failed (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
-      throw Exception("Search failed: $e");
+      debugPrint('Search failed: $e');
+      rethrow;
     }
   }
 
@@ -146,31 +202,103 @@ class SearchService {
     return v.toLowerCase();
   }
 
-  Future<List<WebResult>> searchWeb(String query) async {
-    try {
-      final url = Uri.https(
-        'www.googleapis.com',
-        '/customsearch/v1',
-        {
-          'key': apiKey,
-          'cx': cx,
-          'q': query,
-        },
+  Future<List<PolicyResult>> _searchPoliciesViaNewsApi(
+    String query, {
+    String? ministry,
+    String? status,
+    String? year,
+  }) async {
+    final effectiveNewsApiKey = _effectiveNewsApiKey;
+    if (effectiveNewsApiKey.isEmpty) {
+      throw Exception(
+        'No API key found. Add --dart-define=API_KEY=... to use NewsAPI fallback.',
       );
+    }
+
+    final url = Uri.https('newsapi.org', '/v2/everything', {
+      'q': query,
+      'sortBy': 'publishedAt',
+      'pageSize': '20',
+      'language': 'en',
+      'apiKey': effectiveNewsApiKey,
+    });
+
+    final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception(
+        'NewsAPI fallback failed (${response.statusCode}): ${response.body}',
+      );
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final articles = data['articles'];
+    if (articles is! List) return [];
+
+    final results = articles
+        .whereType<Map<String, dynamic>>()
+        .map((article) {
+          final id = (article['url'] ?? article['title'] ?? '').toString();
+          final title = (article['title'] ?? '').toString();
+          final source = article['source'];
+          final ministry = source is Map<String, dynamic>
+              ? (source['name'] ?? 'News').toString()
+              : 'News';
+          final date = (article['publishedAt'] ?? '').toString();
+          final excerpt =
+              (article['description'] ?? article['content'] ?? '').toString();
+
+          return PolicyResult(
+            id: id,
+            title: title,
+            ministry: ministry,
+            date: date,
+            excerpt: excerpt,
+            status: 'Active',
+            pages: 1,
+          );
+        })
+        .toList();
+
+    return _applyClientFilters(
+      results,
+      ministry: ministry,
+      status: status,
+      year: year,
+    );
+  }
+
+  Future<List<WebResult>> searchNews(String query) async {
+    try {
+      final effectiveNewsApiKey = _effectiveNewsApiKey;
+      if (effectiveNewsApiKey.isEmpty) {
+        throw Exception(
+          'No API key found for news. Pass --dart-define=API_KEY=... (or NEWS_API_KEY).',
+        );
+      }
+
+      final url = Uri.https('newsapi.org', '/v2/everything', {
+        'q': query,
+        'sortBy': 'publishedAt',
+        'pageSize': '10',
+        'apiKey': effectiveNewsApiKey,
+      });
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data["items"] == null) return [];
-        return (data["items"] as List)
-            .map((item) => WebResult.fromJson(item))
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final articles = data['articles'];
+        if (articles is! List) return [];
+
+        return articles
+            .whereType<Map<String, dynamic>>()
+            .map(WebResult.fromJson)
             .toList();
-      } else {
-        throw Exception("Google search failed with status ${response.statusCode}");
       }
+
+      throw Exception('News API failed: ${response.statusCode} ${response.body}');
     } catch (e) {
-      throw Exception("Web search error: $e");
+      throw Exception('News search error: $e');
     }
   }
 }

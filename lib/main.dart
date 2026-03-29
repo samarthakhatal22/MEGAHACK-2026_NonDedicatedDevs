@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'pages/authenticate.dart';
 import 'pages/home.dart';
@@ -10,15 +11,26 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
-  // Force sign out on every app start as requested
+
+  // Force sign out on every app start
   await FirebaseAuth.instance.signOut();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
       child: const MyApp(),
     ),
   );
+}
+
+class ThemeProvider extends ChangeNotifier {
+  ThemeMode themeMode = ThemeMode.system;
+
+  void toggleTheme() {
+    themeMode =
+        themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -43,7 +55,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: themeProvider.themeMode,
+      themeMode: context.watch<ThemeProvider>().themeMode,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -59,6 +71,9 @@ class MyApp extends StatelessWidget {
         },
       ),
       routes: {
+        '/home': (context) => const HomePage(),
+        '/auth': (context) => const AuthenticatePage(),
+      },
     );
   }
 }
