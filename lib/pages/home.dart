@@ -8,6 +8,7 @@ import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
 import '../widgets/scamalertsection.dart';
 import 'ScamAlert.dart';
+import 'search_page.dart';
 
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
@@ -314,7 +315,7 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const SearchPage()),
+        MaterialPageRoute(builder: (_) => SearchPage()),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -373,7 +374,7 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         final metric = _metrics[index];
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
             color: metric.backgroundColor,
             borderRadius: BorderRadius.circular(16),
@@ -381,9 +382,10 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(metric.icons, size: 20, color: metric.iconColor),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 metric.value,
                 style: TextStyle(
@@ -395,6 +397,8 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 1),
               Text(
                 metric.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 10,
                   color: metric.labelColor ?? colorScheme.onSurfaceVariant,
