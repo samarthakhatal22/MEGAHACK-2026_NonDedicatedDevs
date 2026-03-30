@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'search_page.dart';
 import 'profile.dart';
 import 'package:civicshield/Widgets/scamalertsection.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
