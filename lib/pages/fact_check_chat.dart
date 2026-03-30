@@ -398,7 +398,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
               color: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -407,9 +407,9 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -423,7 +423,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                       style: const TextStyle(fontSize: 15),
                       decoration: InputDecoration(
                         hintText: 'Enter a rumor or pick an image...',
-                        hintStyle: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                        hintStyle: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
                       ),
@@ -513,12 +513,12 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
                           color: isUser 
-                            ? colorScheme.primary.withOpacity(0.9) 
-                            : colorScheme.secondaryContainer.withOpacity(0.7),
+                            ? colorScheme.primary.withValues(alpha: 0.9) 
+                            : colorScheme.secondaryContainer.withValues(alpha: 0.7),
                           border: Border.all(
                             color: isUser 
-                              ? Colors.white.withOpacity(0.2) 
-                              : colorScheme.outline.withOpacity(0.1),
+                              ? Colors.white.withValues(alpha: 0.2) 
+                              : colorScheme.outline.withValues(alpha: 0.1),
                           ),
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(20),
@@ -556,7 +556,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                                       if (loadingProgress == null) return child;
                                       return Container(
                                         height: 200,
-                                        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                                         child: const Center(child: CircularProgressIndicator()),
                                       );
                                     },

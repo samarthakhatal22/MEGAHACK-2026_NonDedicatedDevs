@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../one/localization/app_text.dart';
 import '../models/scamalert.dart';
 import '../services/cybernews.dart';
-import '../Widgets/scamalertsection.dart';
 
 class ScamsPage extends StatefulWidget {
   const ScamsPage({super.key});
@@ -14,27 +14,40 @@ class ScamsPage extends StatefulWidget {
 class _ScamsPageState extends State<ScamsPage> {
   final CyberNewsService _service = CyberNewsService();
   late Future<List<ScamAlert>> _futureAlerts;
+  String _languageCode = 'en';
 
   @override
   void initState() {
     super.initState();
-    _futureAlerts = _service.fetchScamAlerts();
+    _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final localeCode = Localizations.localeOf(context).languageCode;
+    if (localeCode != _languageCode) {
+      _languageCode = localeCode;
+      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+    }
   }
 
   void _refresh() {
     setState(() {
-      _futureAlerts = _service.fetchScamAlerts();
+      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final text = AppText.of(context);
+    final localeCode = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Recent Scam Alerts'),
+        title: Text(text.scamPageTitle),
         actions: [
           IconButton(
             onPressed: _refresh,
@@ -56,8 +69,8 @@ class _ScamsPageState extends State<ScamsPage> {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text('Error: ${snapshot.error}'),
-                  TextButton(onPressed: _refresh, child: const Text('Retry')),
+                  Text('${text.errorPrefix}: ${snapshot.error}'),
+                  TextButton(onPressed: _refresh, child: Text(text.retry)),
                 ],
               ),
             );
@@ -65,7 +78,7 @@ class _ScamsPageState extends State<ScamsPage> {
 
           final alerts = snapshot.data ?? [];
           if (alerts.isEmpty) {
-            return const Center(child: Text('No scam alerts found.'));
+            return Center(child: Text(text.noScamAlerts));
           }
 
           return ListView.builder(
@@ -73,7 +86,11 @@ class _ScamsPageState extends State<ScamsPage> {
             itemCount: alerts.length,
             itemBuilder: (context, index) {
               final alert = alerts[index];
-              return _ScamTile(alert: alert);
+              return _ScamTile(
+                alert: alert,
+                localeCode: localeCode,
+                text: text,
+              );
             },
           );
         },
@@ -84,13 +101,19 @@ class _ScamsPageState extends State<ScamsPage> {
 
 class _ScamTile extends StatelessWidget {
   final ScamAlert alert;
+  final String localeCode;
+  final AppText text;
 
-  const _ScamTile({required this.alert});
+  const _ScamTile({
+    required this.alert,
+    required this.localeCode,
+    required this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     // Determine risk style
     Color riskColor;
     Color riskBg;
@@ -125,13 +148,16 @@ class _ScamTile extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: riskBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${alert.riskLevel} Risk',
+                      '${alert.riskLevel} ${text.risk}',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -141,7 +167,7 @@ class _ScamTile extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    _formatDate(alert.publishedDate),
+                    _formatDate(alert.publishedDate, localeCode),
                     style: TextStyle(
                       fontSize: 12,
                       color: colorScheme.onSurfaceVariant,
@@ -189,9 +215,9 @@ class _ScamTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime? date) {
+  String _formatDate(DateTime? date, String localeCode) {
     if (date == null) return '';
-    return DateFormat('MMM dd, yyyy').format(date);
+    return DateFormat('MMM dd, yyyy', localeCode).format(date);
   }
 
   void _showDetails(BuildContext context, ScamAlert alert) {
@@ -199,15 +225,16 @@ class _ScamTile extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ScamDetailsSheet(alert: alert),
+      builder: (context) => _ScamDetailsSheet(alert: alert, text: text),
     );
   }
 }
 
 class _ScamDetailsSheet extends StatelessWidget {
   final ScamAlert alert;
+  final AppText text;
 
-  const _ScamDetailsSheet({required this.alert});
+  const _ScamDetailsSheet({required this.alert, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -236,22 +263,16 @@ class _ScamDetailsSheet extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             alert.title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Text(
             alert.description,
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.5,
-            ),
+            style: const TextStyle(fontSize: 16, height: 1.5),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'HOW TO PROTECT YOURSELF',
+          Text(
+            text.protectYourself,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -259,9 +280,9 @@ class _ScamDetailsSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildTip(Icons.verified_user, 'Verify through official Govt. channels.'),
-          _buildTip(Icons.link_off, 'Never click on suspicious links in SMS/WhatsApp.'),
-          _buildTip(Icons.security, 'Report scams to 1930 (Cyber Crime Helpline).'),
+          _buildTip(Icons.verified_user, text.tipVerify),
+          _buildTip(Icons.link_off, text.tipNoLinks),
+          _buildTip(Icons.security, text.tipReport),
         ],
       ),
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../one/localization/app_text.dart';
 import '../models/scamalert.dart';
 import '../services/cybernews.dart';
 
@@ -12,22 +14,35 @@ class ScamAlertSection extends StatefulWidget {
 class _ScamAlertSectionState extends State<ScamAlertSection> {
   final CyberNewsService _service = CyberNewsService();
   late Future<List<ScamAlert>> _futureAlerts;
+  String _languageCode = 'en';
 
   @override
   void initState() {
     super.initState();
-    _futureAlerts = _service.fetchScamAlerts();
+    _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final localeCode = Localizations.localeOf(context).languageCode;
+    if (localeCode != _languageCode) {
+      _languageCode = localeCode;
+      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+    }
   }
 
   void _refresh() {
     setState(() {
-      _futureAlerts = _service.fetchScamAlerts();
+      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final text = AppText.of(context);
+    final localeCode = Localizations.localeOf(context).languageCode;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +52,7 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
             Icon(Icons.security, size: 14, color: colorScheme.primary),
             const SizedBox(width: 5),
             Text(
-              'RECENT SCAM ALERTS',
+              text.recentScamAlerts.toUpperCase(),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -48,7 +63,11 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
             const Spacer(),
             GestureDetector(
               onTap: _refresh,
-              child: Icon(Icons.refresh_rounded, size: 16, color: colorScheme.primary),
+              child: Icon(
+                Icons.refresh_rounded,
+                size: 16,
+                color: colorScheme.primary,
+              ),
             ),
           ],
         ),
@@ -64,7 +83,8 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
 
               if (snapshot.hasError) {
                 return _ErrorCard(
-                  message: 'Could not load cyber alerts.\n${snapshot.error}',
+                  message: '${text.errorPrefix}: ${snapshot.error}',
+                  retryLabel: text.retry,
                   onRetry: _refresh,
                 );
               }
@@ -72,7 +92,8 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
               final alerts = snapshot.data ?? const <ScamAlert>[];
               if (alerts.isEmpty) {
                 return _ErrorCard(
-                  message: 'No scam alerts found at this time.',
+                  message: text.noScamAlerts,
+                  retryLabel: text.retry,
                   onRetry: _refresh,
                 );
               }
@@ -82,7 +103,11 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
                 padding: const EdgeInsets.only(right: 4),
                 itemCount: alerts.length > 3 ? 3 : alerts.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
-                itemBuilder: (context, index) => _AlertCard(alert: alerts[index]),
+                itemBuilder: (context, index) => _AlertCard(
+                  alert: alerts[index],
+                  text: text,
+                  localeCode: localeCode,
+                ),
               );
             },
           ),
@@ -95,14 +120,23 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
 // ── Alert Card ───────────────────────────────────────────────────────────────
 
 class _AlertCard extends StatelessWidget {
-  const _AlertCard({required this.alert});
+  const _AlertCard({
+    required this.alert,
+    required this.text,
+    required this.localeCode,
+  });
 
   final ScamAlert alert;
+  final AppText text;
+  final String localeCode;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final width = (MediaQuery.of(context).size.width * 0.80).clamp(240.0, 320.0);
+    final width = (MediaQuery.of(context).size.width * 0.80).clamp(
+      240.0,
+      320.0,
+    );
     final riskStyle = _riskStyle(alert.riskLevel);
 
     return Container(
@@ -147,7 +181,7 @@ class _AlertCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '${alert.riskLevel} Risk',
+                  '${alert.riskLevel} ${text.risk}',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -158,7 +192,7 @@ class _AlertCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                _formatDate(alert.publishedDate),
+                _formatDate(alert.publishedDate, localeCode),
                 style: TextStyle(
                   fontSize: 10,
                   color: colorScheme.onSurfaceVariant,
@@ -206,7 +240,11 @@ class _AlertCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.rss_feed_rounded, size: 9, color: colorScheme.primary),
+                    Icon(
+                      Icons.rss_feed_rounded,
+                      size: 9,
+                      color: colorScheme.primary,
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       alert.source,
@@ -226,13 +264,9 @@ class _AlertCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime? date) {
+  String _formatDate(DateTime? date, String localeCode) {
     if (date == null) return '';
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}';
+    return DateFormat('MMM d', localeCode).format(date);
   }
 
   _RiskStyle _riskStyle(String level) {
@@ -277,8 +311,10 @@ class _LoadingShimmerState extends State<_LoadingShimmer>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat(reverse: true);
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
 
@@ -318,9 +354,14 @@ class _LoadingShimmerState extends State<_LoadingShimmer>
 // ── Error card ───────────────────────────────────────────────────────────────
 
 class _ErrorCard extends StatelessWidget {
-  const _ErrorCard({required this.message, required this.onRetry});
+  const _ErrorCard({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
 
   final String message;
+  final String retryLabel;
   final VoidCallback onRetry;
 
   @override
@@ -336,12 +377,19 @@ class _ErrorCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.wifi_off_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+          Icon(
+            Icons.wifi_off_rounded,
+            size: 20,
+            color: colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           TextButton(
@@ -351,7 +399,7 @@ class _ErrorCard extends StatelessWidget {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Retry', style: TextStyle(fontSize: 12)),
+            child: Text(retryLabel, style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),

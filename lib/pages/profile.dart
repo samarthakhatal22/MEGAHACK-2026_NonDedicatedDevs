@@ -582,7 +582,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderSide: BorderSide(color: colorScheme.outlineVariant),
               ),
               filled: true,
-              fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             ),
           ),
         ),
