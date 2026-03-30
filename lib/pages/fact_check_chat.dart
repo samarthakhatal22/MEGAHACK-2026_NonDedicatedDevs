@@ -18,6 +18,9 @@ class ChatMessage {
   final FactResult? result;
   final Uint8List? imageBytes;
   final String? imageUrl;
+  // ADDED: Track document ID and if deep analysis has been requested for this msg
+  String? firestoreDocId;
+  bool isDeepAnalysisRequested;
 
   ChatMessage({
     required this.text,
@@ -25,6 +28,8 @@ class ChatMessage {
     this.result,
     this.imageBytes,
     this.imageUrl,
+    this.firestoreDocId,
+    this.isDeepAnalysisRequested = false,
   });
 }
 
@@ -131,10 +136,14 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
             references: List<String>.from(resultData['references'] ?? []),
             isAiGenerated: resultData['isAiGenerated'],
             authenticityReason: resultData['authenticityReason'],
+            socialSourcesChecked: resultData['socialSourcesChecked'] != null ? List<String>.from(resultData['socialSourcesChecked']) : null,
           );
         }
+        
+        final docId = doc.id;
+        final deepAnalysis = data['deepAnalysis'] as String?;
 
-        return [
+        final msgs = [
           ChatMessage(
             text: data['queryText'] ?? '',
             role: MessageRole.user,
@@ -148,8 +157,20 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
             role: MessageRole.assistant,
             result: result,
             imageUrl: data['imageUrl'],
+            firestoreDocId: docId,
+            isDeepAnalysisRequested: deepAnalysis != null,
           ),
         ];
+
+        // ADDED: Re-inject the deep analysis to the chat view on reload
+        if (deepAnalysis != null && deepAnalysis.isNotEmpty) {
+          msgs.add(ChatMessage(
+            text: deepAnalysis,
+            role: MessageRole.assistant,
+          ));
+        }
+
+        return msgs;
       }).expand((i) => i).toList();
 
       setState(() {
@@ -220,29 +241,30 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
         imageUrl: imageUrl, // Pass the new URL
       );
 
+      final assistantMsg = ChatMessage(
+        text: result.isAiGenerated == true
+            ? "⚠️ Potential AI Manipulation Detected."
+            : (imageUrl != null
+                  ? "Verification complete. Image Link: $imageUrl"
+                  : "Verification complete."),
+        role: MessageRole.assistant,
+        result: result,
+        imageUrl: imageUrl,
+      );
+
       setState(() {
-        _messages.add(
-          ChatMessage(
-            text: result.isAiGenerated == true
-                ? "⚠️ Potential AI Manipulation Detected."
-                : (imageUrl != null
-                      ? "Verification complete. Image Link: $imageUrl"
-                      : "Verification complete."),
-            role: MessageRole.assistant,
-            result: result,
-            imageUrl: imageUrl,
-          ),
-        );
+        _messages.add(assistantMsg);
       });
 
-      // 3. Store result in Firestore
+      // 3. Store result in Firestore (Change 3)
       try {
         final user = FirebaseAuth.instance.currentUser;
-        await FirebaseFirestore.instance.collection("fact_checks").add({
+        final docRef = await FirebaseFirestore.instance.collection("fact_checks").add({
           'userId': user?.uid ?? 'anonymous',
           'queryText': query,
           'imageUrl': imageUrl,
           'timestamp': FieldValue.serverTimestamp(),
+          'deepAnalysis': null,
           'result': {
             'status': result.status,
             'accuracy_percentage': result.score,
@@ -250,9 +272,15 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
             'references': result.references,
             'isAiGenerated': result.isAiGenerated,
             'authenticityReason': result.authenticityReason,
+            'socialSourcesChecked': result.socialSourcesChecked ?? [],
+            'verdictColor': result.status,
           },
         });
-        debugPrint('Fact check saved to Firestore successfully.');
+        // Attach docRef.id to history object so Know More API can find it
+        setState(() {
+          assistantMsg.firestoreDocId = docRef.id;
+        });
+        debugPrint('Fact check saved to Firestore successfully. Doc: ${docRef.id}');
       } catch (firestoreError) {
         debugPrint('CRITICAL: Error saving to Firestore: $firestoreError');
         if (mounted) {
@@ -334,6 +362,27 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
         ? const Center(child: CircularProgressIndicator())
         : Column(
             children: [
+              // ADDED: Global Scope Indicator (Change 1)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🌍', style: TextStyle(fontSize: 11)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Fact-checking against global official sources',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
@@ -579,6 +628,28 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                   if (message.result != null) ...[
                     const SizedBox(height: 8),
                     _buildResultCard(message.result!),
+                    // ADDED: Collapsible Sources Cross-Referenced section (Change 2)
+                    _buildSourcesCrossReferenced(message.result!),
+                    
+                    // ADDED: Know More Button functionality (Change 1)
+                    if (!message.isDeepAnalysisRequested && message.role == MessageRole.assistant)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () => _requestDeepAnalysis(message),
+                            icon: const Icon(Icons.info_outline, size: 16),
+                            label: const Text('Know More', style: TextStyle(fontSize: 12)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: colorScheme.primary.withValues(alpha: 0.8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ],
               ),
@@ -586,6 +657,130 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
           ),
         );
       },
+    );
+  }
+
+  // ADDED: Connect "Know More" button to deep analysis API and update Firestore (Change 2)
+  Future<void> _requestDeepAnalysis(ChatMessage sourceMessage) async {
+    setState(() {
+      sourceMessage.isDeepAnalysisRequested = true;
+      _isLoading = true;
+    });
+    _scrollToBottom();
+
+    try {
+      final historyIndex = _messages.indexOf(sourceMessage);
+      final relevantMessages = _messages.sublist(0, historyIndex + 1);
+      
+      List<Map<String, dynamic>> apiHistory = [];
+      for (var msg in relevantMessages) {
+        if (msg.role == MessageRole.user) {
+          apiHistory.add({'role': 'user', 'content': msg.text});
+        } else {
+          String content = msg.text;
+          if (msg.result != null) {
+             content += '\nResult: ${msg.result!.status}, Accuracy: ${msg.result!.score}%\nExplanation: ${msg.result!.simpleDescription}';
+          }
+          apiHistory.add({'role': 'assistant', 'content': content});
+        }
+      }
+
+      final prompt = "Based on your previous fact-check response, provide deeper analysis:\n"
+          "1. Detailed background context about this topic\n"
+          "2. Historical precedents or similar past incidents\n"
+          "3. Which specific official sources or social media accounts confirmed or denied this\n"
+          "4. What experts or official bodies have said about this\n"
+          "5. Any related misinformation patterns to be aware of\n"
+          "Keep it factual and cite sources where possible.";
+          
+      apiHistory.add({'role': 'user', 'content': prompt});
+
+      final deepAnalysisResponse = await widget.service.getDeepAnalysis(apiHistory);
+
+      setState(() {
+        _messages.add(ChatMessage(
+          text: deepAnalysisResponse,
+          role: MessageRole.assistant,
+        ));
+      });
+
+      if (sourceMessage.firestoreDocId != null) {
+        try {
+          await FirebaseFirestore.instance
+              .collection('fact_checks')
+              .doc(sourceMessage.firestoreDocId)
+              .update({'deepAnalysis': deepAnalysisResponse});
+        } catch (e) {
+          debugPrint('Error updating deep analysis to Firestore: $e');
+        }
+      }
+    } catch (e) {
+      setState(() {
+        sourceMessage.isDeepAnalysisRequested = false;
+        _messages.add(ChatMessage(
+          text: "Failed to get deeper analysis: $e",
+          role: MessageRole.assistant,
+        ));
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    }
+  }
+
+  // ADDED: Widget to display cross-referenced official handles
+  Widget _buildSourcesCrossReferenced(FactResult result) {
+    List<String>? sources = result.socialSourcesChecked;
+
+    if (sources == null || sources.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5), width: 1),
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            title: Row(
+              children: [
+                Icon(Icons.verified, size: 16, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                const Text('Sources Cross-Referenced', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: sources.map((handle) => Chip(
+                    label: Text(handle, style: const TextStyle(fontSize: 11)),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                    ),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                  )).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -635,18 +830,23 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     Color statusColor;
     IconData statusIcon;
 
+    // CHANGED: Verdict Color Coding (Change 3)
     switch (result.status.toLowerCase()) {
       case 'true':
-        statusColor = Colors.green;
+        statusColor = Colors.green.shade600;
         statusIcon = Icons.check_circle;
         break;
       case 'false':
-        statusColor = Colors.red;
+        statusColor = Colors.red.shade600;
         statusIcon = Icons.cancel;
         break;
-      default:
-        statusColor = Colors.orange;
+      case 'misleading':
+        statusColor = Colors.orange.shade600;
         statusIcon = Icons.warning;
+        break;
+      default:
+        statusColor = Colors.grey.shade600;
+        statusIcon = Icons.help_outline;
     }
 
     return Card(
@@ -656,156 +856,162 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(statusIcon, color: statusColor, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  result.status.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        // CHANGED: Left border accent based on verdict status color
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: statusColor, width: 6)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(statusIcon, color: statusColor, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    result.status.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  '${result.score}%',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-            if (result.isAiGenerated != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: result.isAiGenerated!
-                      ? Colors.red.withValues(alpha: 0.1)
-                      : Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: result.isAiGenerated!
-                        ? Colors.red.withValues(alpha: 0.3)
-                        : Colors.blue.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  const Spacer(),
+                  // CHANGED: Accuracy Score Visual Progress Bar (Change 5)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Icon(
-                          result.isAiGenerated!
-                              ? Icons.auto_awesome
-                              : Icons.verified_user,
-                          size: 16,
-                          color: result.isAiGenerated!
-                              ? Colors.red
-                              : Colors.blue,
+                        SizedBox(
+                          width: 50,
+                          height: 6,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: LinearProgressIndicator(
+                              value: (result.score.clamp(0, 100)) / 100.0,
+                              backgroundColor: statusColor.withOpacity(0.2),
+                              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Text(
-                          result.isAiGenerated!
-                              ? 'AI MANIPULATION SUSPECTED'
-                              : 'IMAGE AUTHENTICITY VERIFIED',
+                          '${result.score}%',
                           style: TextStyle(
-                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: result.isAiGenerated!
-                                ? Colors.red
-                                : Colors.blue,
+                            color: statusColor,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
-                    if (result.authenticityReason != null) ...[
-                      const SizedBox(height: 4),
+                  ),
+                ],
+              ),
+              // CHANGED: AI Generated Flag Badge (Change 4)
+              if (result.isAiGenerated == true) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('⚠️', style: TextStyle(fontSize: 12)),
+                      SizedBox(width: 6),
                       Text(
-                        result.authenticityReason!,
+                        'AI Generated Content Detected',
                         style: TextStyle(
                           fontSize: 12,
-                          color: colorScheme.onSurface,
-                          height: 1.4,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-            const Divider(height: 24),
-            Text(
-              result.simpleDescription,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            if (result.references.isNotEmpty) ...[
-              const SizedBox(height: 12),
+                if (result.authenticityReason != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    result.authenticityReason!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurface,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ],
+              const Divider(height: 24),
               Text(
-                'OFFICIAL SOURCES',
+                result.simpleDescription,
                 style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                  letterSpacing: 1.1,
+                  fontSize: 14,
+                  height: 1.5,
+                  color: colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 8),
-              ...result.references.map(
-                (url) => Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => _launchURL(url),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 6.0,
-                          horizontal: 4.0,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.link,
-                              size: 16,
-                              color: colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                url,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: colorScheme.primary,
-                                  decoration: TextDecoration.underline,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+              if (result.references.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'OFFICIAL SOURCES',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...result.references.map(
+                  (url) => Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => _launchURL(url),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 6.0,
+                            horizontal: 4.0,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.link,
+                                size: 16,
+                                color: colorScheme.primary,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  url,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

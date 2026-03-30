@@ -22,6 +22,13 @@ dependencies:
   image_picker: ^1.2.1
   cloudinary_public: ^0.23.1
   intl: ^0.20.2
+  webfeed: ^0.7.0
+
+dependency_overrides:
+  intl: ^0.20.2
+  xml: ^6.3.0
+
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +46,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/app_icon.png
+    - .env

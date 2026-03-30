@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'search_page.dart';
 import 'profile.dart';
+import 'package:civicshield/Widgets/scamalertsection.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'scams_page.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
@@ -97,9 +98,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
-  // NOTE: Use --dart-define=GROQ_API_KEY=your_key when running or building.
-  final _factCheckService =
-      FactCheckService(apiKey: const String.fromEnvironment('GROQ_API_KEY'));
+  final _factCheckService = FactCheckService(
+    apiKey: dotenv.env['GROQ_API_KEY'] ?? '',
+  );
 
   final List<MetricModel> _metrics = const [
     MetricModel(
