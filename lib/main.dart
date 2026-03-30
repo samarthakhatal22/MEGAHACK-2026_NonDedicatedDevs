@@ -15,8 +15,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Force sign out on every app start
-  await FirebaseAuth.instance.signOut();
 
   runApp(
     ChangeNotifierProvider(
@@ -26,15 +24,6 @@ void main() async {
   );
 }
 
-class ThemeProvider extends ChangeNotifier {
-  ThemeMode themeMode = ThemeMode.system;
-
-  void toggleTheme() {
-    themeMode =
-        themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
-  }
-}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

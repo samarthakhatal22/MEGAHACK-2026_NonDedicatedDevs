@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PolicyResult {
   final String id;
@@ -57,14 +58,6 @@ class WebResult {
 }
 
 class SearchService {
-  static const String apiKey = String.fromEnvironment(
-    'API_KEY',
-    defaultValue: '',
-  );
-  static const String policyApiKey = String.fromEnvironment(
-    'POLICY_API_KEY',
-    defaultValue: '',
-  );
   static const String policyApiKeyHeader = String.fromEnvironment(
     'POLICY_API_KEY_HEADER',
     defaultValue: 'X-API-KEY',
@@ -74,19 +67,16 @@ class SearchService {
     'POLICY_SEARCH_BASE_URL',
     defaultValue: 'https://your-api-endpoint.com/search',
   );
-  static const String newsApiKey = String.fromEnvironment(
-    'NEWS_API_KEY',
-    defaultValue: '',
-  );
 
   String get _effectivePolicyApiKey {
-    if (policyApiKey.isNotEmpty) return policyApiKey;
-    return apiKey;
+    if (dotenv.env['POLICY_API_KEY'] != null && dotenv.env['POLICY_API_KEY']!.isNotEmpty) return dotenv.env['POLICY_API_KEY']!;
+    if (dotenv.env['NEWS_API_KEY'] != null && dotenv.env['NEWS_API_KEY']!.isNotEmpty) return dotenv.env['NEWS_API_KEY']!;
+    return '';
   }
 
   String get _effectiveNewsApiKey {
-    if (newsApiKey.isNotEmpty) return newsApiKey;
-    return apiKey;
+    if (dotenv.env['NEWS_API_KEY'] != null && dotenv.env['NEWS_API_KEY']!.isNotEmpty) return dotenv.env['NEWS_API_KEY']!;
+    return '';
   }
 
   Future<List<PolicyResult>> searchPolicies({
@@ -132,7 +122,7 @@ class SearchService {
         headers[policyApiKeyHeader] = effectivePolicyApiKey;
       } else {
         debugPrint(
-          'No API key found. Add --dart-define=API_KEY=... (or POLICY_API_KEY for policy-only).',
+          'No API key found. Add NEWS_API_KEY to .env file.',
         );
       }
 
@@ -211,7 +201,7 @@ class SearchService {
     final effectiveNewsApiKey = _effectiveNewsApiKey;
     if (effectiveNewsApiKey.isEmpty) {
       throw Exception(
-        'No API key found. Add --dart-define=API_KEY=... to use NewsAPI fallback.',
+        'Search temporarily unavailable',
       );
     }
 
@@ -272,7 +262,7 @@ class SearchService {
       final effectiveNewsApiKey = _effectiveNewsApiKey;
       if (effectiveNewsApiKey.isEmpty) {
         throw Exception(
-          'No API key found for news. Pass --dart-define=API_KEY=... (or NEWS_API_KEY).',
+          'Search temporarily unavailable',
         );
       }
 

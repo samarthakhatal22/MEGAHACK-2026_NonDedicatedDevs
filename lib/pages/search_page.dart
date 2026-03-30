@@ -310,14 +310,25 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildResultCard(BuildContext context, search_service.PolicyResult result) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
-      ),
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => _buildFullNewsPopup(context, result),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -334,6 +345,79 @@ class _SearchPageState extends State<SearchPage> {
               Text('${result.pages} pages', style: TextStyle(fontSize: 11)),
             ],
           )
+        ],
+      ),
+    ));
+  }
+
+  Widget _buildFullNewsPopup(BuildContext context, search_service.PolicyResult result) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Policy Details',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Body
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    result.title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.account_balance_outlined, size: 16, color: colorScheme.primary),
+                      const SizedBox(width: 6),
+                      Text(result.ministry, style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w500)),
+                      const Spacer(),
+                      Icon(Icons.calendar_today_outlined, size: 16, color: colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Text(result.date, style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    result.excerpt,
+                    style: TextStyle(fontSize: 15, height: 1.6, color: colorScheme.onSurface),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
