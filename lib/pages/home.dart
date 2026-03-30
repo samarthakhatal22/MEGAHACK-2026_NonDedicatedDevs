@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'profile.dart';
 import 'package:civicshield/Widgets/scamalertsection.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'scams_page.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
@@ -16,7 +17,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedNavIndex = 0;
 
-  final _factCheckService = FactCheckService();
+  final _factCheckService = FactCheckService(
+    apiKey: dotenv.env['GROQ_API_KEY'] ?? '',
+  );
 
   final List<MetricModel> _metrics = const [
     MetricModel(value: '1,284', label: 'Total policies'),
