@@ -7,7 +7,6 @@ import 'one/providers/theme_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'pages/authenticate.dart';
 import 'pages/home.dart';
-import 'pages/profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +14,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // Force sign out on every app start as requested
+
+  // Force sign out on every app start
   await FirebaseAuth.instance.signOut();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -25,13 +26,21 @@ void main() async {
   );
 }
 
+class ThemeProvider extends ChangeNotifier {
+  ThemeMode themeMode = ThemeMode.system;
+
+  void toggleTheme() {
+    themeMode =
+        themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return MaterialApp(
       title: 'CivicShield',
       debugShowCheckedModeBanner: false,
@@ -49,7 +58,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: themeProvider.themeMode,
+      themeMode: context.watch<ThemeProvider>().themeMode,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -65,7 +74,8 @@ class MyApp extends StatelessWidget {
         },
       ),
       routes: {
-        '/profile': (context) => const ProfilePage(),
+        '/home': (context) => const HomePage(),
+        '/auth': (context) => const AuthenticatePage(),
       },
     );
   }
