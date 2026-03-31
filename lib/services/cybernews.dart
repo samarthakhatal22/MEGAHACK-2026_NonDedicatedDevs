@@ -25,6 +25,7 @@ class CyberNewsService {
     '/api/news',
     '/cybersecurity-news',
   ];
+  
 
   static const _scamKeywords = [
     'phishing',
