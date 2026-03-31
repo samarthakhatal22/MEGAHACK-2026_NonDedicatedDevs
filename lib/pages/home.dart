@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'profile.dart';
-import 'package:civicshield/Widgets/scamalertsection.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'scams_page.dart';
 import 'fact_check_chat.dart';
 import '../services/fact_check_service.dart';
-import '../widgets/scamalertsection.dart';
 import 'ScamAlert.dart';
 import 'search_page.dart';
 

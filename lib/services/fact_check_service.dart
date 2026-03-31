@@ -240,15 +240,15 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
 
       // CHANGED: Extract mentioned handles into a new optional field
       List<String> extractedHandles = [];
-      kOfficialSocialSources.values.forEach((entities) {
-        entities.values.forEach((handles) {
+      for (var entities in kOfficialSocialSources.values) {
+        for (var handles in entities.values) {
           for (final handle in handles) {
             if (responseText.contains(handle) && !extractedHandles.contains(handle)) {
               extractedHandles.add(handle);
             }
           }
-        });
-      });
+        }
+      }
 
       // CHANGED: Returned FactResult with sources
       return FactResult.fromJson(jsonMap, extractedHandles.isNotEmpty ? extractedHandles : null);
