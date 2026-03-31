@@ -1,16 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
-import 'profile.dart';
-import 'package:civicshield/Widgets/scamalertsection.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'scams_page.dart';
-import 'fact_check_chat.dart';
+import 'package:provider/provider.dart';
+
 import '../one/localization/app_text.dart';
 import '../one/providers/language_provider.dart';
 import '../services/fact_check_service.dart';
-import '../widgets/scamalertsection.dart';
 import 'ScamAlert.dart';
+import 'fact_check_chat.dart';
+import 'profile.dart';
+import 'scams_page.dart';
 import 'search_page.dart';
 
 class PolicyLensApp extends StatelessWidget {
@@ -23,18 +22,12 @@ class PolicyLensApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6750A4),
-          brightness: Brightness.light,
-        ),
-        fontFamily: 'GoogleSans',
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6750A4)),
       ),
       home: const HomePage(),
     );
   }
 }
-
-// ─── Models ───────────────────────────────────────────────────────────────────
 
 enum PolicyStatus { active, draft, conflict, review }
 
@@ -55,7 +48,7 @@ class PolicyModel {
 class MetricModel {
   final String value;
   final String label;
-  final IconData icons;
+  final IconData icon;
   final Color? backgroundColor;
   final Color? valueColor;
   final Color? labelColor;
@@ -64,7 +57,7 @@ class MetricModel {
   const MetricModel({
     required this.value,
     required this.label,
-    required this.icons,
+    required this.icon,
     this.backgroundColor,
     this.valueColor,
     this.labelColor,
@@ -80,7 +73,7 @@ class _StatusConfig {
   final Color chipBg;
   final Color chipText;
 
-  _StatusConfig({
+  const _StatusConfig({
     required this.label,
     required this.icon,
     required this.iconBg,
@@ -89,8 +82,6 @@ class _StatusConfig {
     required this.chipText,
   });
 }
-
-// ─── HomePage ─────────────────────────────────────────────────────────────────
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -110,7 +101,7 @@ class _HomePageState extends State<HomePage> {
     MetricModel(
       value: '1,284',
       label: 'Total policies',
-      icons: Icons.policy_outlined,
+      icon: Icons.policy_outlined,
       backgroundColor: Color(0xFFE8DEF8),
       valueColor: Color(0xFF21005D),
       labelColor: Color(0xFF4F378B),
@@ -119,7 +110,7 @@ class _HomePageState extends State<HomePage> {
     MetricModel(
       value: '47',
       label: 'Updated',
-      icons: Icons.update_outlined,
+      icon: Icons.update_outlined,
       backgroundColor: Color(0xFFD3E4FD),
       valueColor: Color(0xFF0D47A1),
       labelColor: Color(0xFF185FA5),
@@ -128,7 +119,7 @@ class _HomePageState extends State<HomePage> {
     MetricModel(
       value: '12',
       label: 'Pending',
-      icons: Icons.pending_outlined,
+      icon: Icons.pending_outlined,
       backgroundColor: Color(0xFFFFF0C5),
       valueColor: Color(0xFF7A4F00),
       labelColor: Color(0xFF854F0B),
@@ -137,7 +128,7 @@ class _HomePageState extends State<HomePage> {
     MetricModel(
       value: '3',
       label: 'Conflicts',
-      icons: Icons.warning_amber_outlined,
+      icon: Icons.warning_amber_outlined,
       backgroundColor: Color(0xFFFCDAD7),
       valueColor: Color(0xFF8C1D18),
       labelColor: Color(0xFF8C1D18),
@@ -175,16 +166,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    String initials = 'U';
-    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
-      final names = user.displayName!.split(' ');
-      initials = names.length >= 2
-          ? '${names[0][0]}${names[1][0]}'.toUpperCase()
-          : names[0][0].toUpperCase();
-    }
-
-    final colorScheme = Theme.of(context).colorScheme;
     final text = AppText.of(context);
+    final initials = _buildInitials(user);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -192,29 +175,39 @@ class _HomePageState extends State<HomePage> {
         child: IndexedStack(
           index: _selectedNavIndex,
           children: [
-            // Index 0 — Home
-            _buildHomeTab(context, user, initials),
-            // Index 1 — Scams
+            _buildHomeTab(context, user, initials, text),
             const ScamsPage(),
-            // Index 2 — Fact Check
             FactCheckChatPage(service: _factCheckService),
-            // Index 3 — Profile
             const ProfilePage(),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
+      bottomNavigationBar: _buildBottomNav(context, text),
     );
   }
 
-  // ─── Home tab ──────────────────────────────────────────────────────────────
+  String _buildInitials(User? user) {
+    if (user?.displayName == null || user!.displayName!.isEmpty) {
+      return 'U';
+    }
 
-  Widget _buildHomeTab(BuildContext context, User? user, String initials) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final names = user.displayName!.split(' ');
+    if (names.length >= 2) {
+      return '${names[0][0]}${names[1][0]}'.toUpperCase();
+    }
 
+    return names[0][0].toUpperCase();
+  }
+
+  Widget _buildHomeTab(
+    BuildContext context,
+    User? user,
+    String initials,
+    AppText text,
+  ) {
     return Column(
       children: [
-        _buildTopAppBar(context, user, initials),
+        _buildTopAppBar(context, user, initials, text),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -224,21 +217,21 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 12),
                 _buildSearchBar(context),
                 const SizedBox(height: 20),
-                _buildSectionLabel(context, 'Overview'),
+                _buildSectionLabel(context, text.overview),
                 const SizedBox(height: 8),
                 _buildMetricsGrid(context),
                 const SizedBox(height: 20),
-                _buildSectionLabel(context, 'Recent policies'),
+                _buildSectionLabel(context, text.recentPolicies),
                 const SizedBox(height: 8),
-                _buildPoliciesCard(context),
+                _buildPoliciesCard(context, text),
                 const SizedBox(height: 20),
-                _buildSectionLabel(context, 'Recent Scam Alerts'),
+                _buildSectionLabel(context, text.recentScamAlerts),
                 const SizedBox(height: 8),
                 _buildScamAlertsCard(context),
                 const SizedBox(height: 20),
-                _buildSectionLabel(context, 'AI activity'),
+                _buildSectionLabel(context, text.aiActivity),
                 const SizedBox(height: 8),
-                _buildAIActivityCard(context),
+                _buildAIActivityCard(context, text),
                 const SizedBox(height: 24),
               ],
             ),
@@ -248,15 +241,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─── Top App Bar ───────────────────────────────────────────────────────────
-
   Widget _buildTopAppBar(
     BuildContext context,
-    ColorScheme colorScheme,
     User? user,
     String initials,
     AppText text,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
@@ -265,7 +257,7 @@ class _HomePageState extends State<HomePage> {
             'Civic-Shield',
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: colorScheme.onSurface,
             ),
           ),
@@ -284,8 +276,8 @@ class _HomePageState extends State<HomePage> {
                 await FirebaseAuth.instance.signOut();
               }
             },
-            itemBuilder: (_) => [
-              const PopupMenuItem<String>(
+            itemBuilder: (_) => const [
+              PopupMenuItem<String>(
                 value: 'logout',
                 child: ListTile(
                   leading: Icon(Icons.logout),
@@ -294,8 +286,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ],
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: colorScheme.primaryContainer,
+              child: Text(
+                user != null ? initials : 'U',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           PopupMenuButton<AppLanguage>(
             tooltip: text.language,
             onSelected: (value) {
@@ -336,7 +339,38 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─── Section Label ─────────────────────────────────────────────────────────
+  Widget _buildSearchBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: () {
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const SearchPage()));
+      },
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        height: 46,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Search policies, scams, and advisories',
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildSectionLabel(BuildContext context, String label) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -352,8 +386,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─── Metrics Grid ──────────────────────────────────────────────────────────
-
   Widget _buildMetricsGrid(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -366,14 +398,11 @@ class _HomePageState extends State<HomePage> {
         mainAxisSpacing: 10,
         childAspectRatio: 2.2,
       ),
-      itemCount: metrics.length,
+      itemCount: _metrics.length,
       itemBuilder: (context, index) {
-        final metric = metrics[index];
+        final metric = _metrics[index];
         return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 10,
-          ), // Reduced vertical padding
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: metric.backgroundColor,
             borderRadius: BorderRadius.circular(16),
@@ -383,7 +412,7 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(metric.icons, size: 20, color: metric.iconColor),
+              Icon(metric.icon, size: 20, color: metric.iconColor),
               const SizedBox(height: 4),
               Text(
                 metric.value,
@@ -410,9 +439,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─── Policies Card ─────────────────────────────────────────────────────────
-
-  Widget _buildPoliciesCard(BuildContext context) {
+  Widget _buildPoliciesCard(BuildContext context, AppText text) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -423,20 +450,12 @@ class _HomePageState extends State<HomePage> {
       ),
       color: colorScheme.surface,
       child: Column(
-        children: [
-          ..._recentPolicies.asMap().entries.map((entry) {
-            final index = entry.key;
-            final policy = entry.value;
-            final isLast = index == _recentPolicies.length - 1;
-            return _buildPolicyListItem(
-              context,
-              policy,
-              isLast,
-              colorScheme,
-              text,
-            );
-          }),
-        ],
+        children: _recentPolicies.asMap().entries.map((entry) {
+          final index = entry.key;
+          final policy = entry.value;
+          final isLast = index == _recentPolicies.length - 1;
+          return _buildPolicyListItem(context, policy, isLast, text);
+        }).toList(),
       ),
     );
   }
@@ -445,9 +464,10 @@ class _HomePageState extends State<HomePage> {
     BuildContext context,
     PolicyModel policy,
     bool isLast,
+    AppText text,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final statusConfig = _getStatusConfig(policy.status);
+    final statusConfig = _getStatusConfig(policy.status, text);
 
     return InkWell(
       onTap: () {},
@@ -501,7 +521,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${policy.ministry} · ${policy.date}',
+                    '${policy.ministry} � ${policy.date}',
                     style: TextStyle(
                       fontSize: 11,
                       color: colorScheme.onSurfaceVariant,
@@ -578,8 +598,6 @@ class _HomePageState extends State<HomePage> {
         );
     }
   }
-
-  // ─── Scam Alerts Card ──────────────────────────────────────────────────────
 
   Widget _buildScamAlertsCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -763,9 +781,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─── AI Activity Card ──────────────────────────────────────────────────────
-
-  Widget _buildAIActivityCard(BuildContext context) {
+  Widget _buildAIActivityCard(BuildContext context, AppText text) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -835,10 +851,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ─── Bottom Nav ────────────────────────────────────────────────────────────
-
-  // ─── Bottom Nav ────────────────────────────────────────────────────────────
-
   Widget _buildBottomNav(BuildContext context, AppText text) {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
@@ -847,29 +859,24 @@ class _HomePageState extends State<HomePage> {
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: [
         NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: const Icon(Icons.home),
           label: text.home,
         ),
         NavigationDestination(
-          icon: Icon(Icons.security_outlined),
-          selectedIcon: Icon(Icons.security),
+          icon: const Icon(Icons.security_outlined),
+          selectedIcon: const Icon(Icons.security),
           label: text.scams,
         ),
         NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
+          icon: const Icon(Icons.verified_outlined),
+          selectedIcon: const Icon(Icons.verified),
+          label: text.factCheck,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.person_outline),
+          selectedIcon: const Icon(Icons.person),
           label: text.profile,
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.verified_outlined),
-          selectedIcon: Icon(Icons.verified),
-          label: 'Fact Check',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: 'Profile',
         ),
       ],
     );

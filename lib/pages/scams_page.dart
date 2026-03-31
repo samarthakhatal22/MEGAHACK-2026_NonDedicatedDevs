@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../one/localization/app_text.dart';
+
 import '../models/scamalert.dart';
+import '../one/localization/app_text.dart';
 import '../services/multi_source_scam_service.dart';
 
-// ── Category display config ────────────────────────────────────────────────────
-
 const Map<String, _CategoryMeta> _categoryMeta = {
-  'UPI Fraud': _CategoryMeta(icon: '💰', color: Color(0xFF8C1D18)),
-  'Phishing': _CategoryMeta(icon: '🎣', color: Color(0xFF6A1E5A)),
-  'WhatsApp Scam': _CategoryMeta(icon: '📱', color: Color(0xFF0D47A1)),
-  'Investment Scam': _CategoryMeta(icon: '📈', color: Color(0xFF7A4F00)),
-  'Job Scam': _CategoryMeta(icon: '🎓', color: Color(0xFF1A5E20)),
-  'Delivery Scam': _CategoryMeta(icon: '📦', color: Color(0xFF37474F)),
-  'Other': _CategoryMeta(icon: '⚠️', color: Color(0xFF4A4A4A)),
+  'UPI Fraud': _CategoryMeta(icon: 'money', color: Color(0xFF8C1D18)),
+  'Phishing': _CategoryMeta(icon: 'phishing', color: Color(0xFF6A1E5A)),
+  'WhatsApp Scam': _CategoryMeta(icon: 'chat', color: Color(0xFF0D47A1)),
+  'Investment Scam': _CategoryMeta(
+    icon: 'trending_up',
+    color: Color(0xFF7A4F00),
+  ),
+  'Job Scam': _CategoryMeta(icon: 'work', color: Color(0xFF1A5E20)),
+  'Delivery Scam': _CategoryMeta(
+    icon: 'local_shipping',
+    color: Color(0xFF37474F),
+  ),
+  'Other': _CategoryMeta(icon: 'warning', color: Color(0xFF4A4A4A)),
 };
 
 class _CategoryMeta {
   final String icon;
   final Color color;
+
   const _CategoryMeta({required this.icon, required this.color});
 }
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 
 class ScamsPage extends StatefulWidget {
   const ScamsPage({super.key});
@@ -33,7 +37,6 @@ class ScamsPage extends StatefulWidget {
 
 class _ScamsPageState extends State<ScamsPage>
     with AutomaticKeepAliveClientMixin {
-  // Keeps fetch alive when user switches tabs and returns.
   @override
   bool get wantKeepAlive => true;
 
@@ -43,22 +46,12 @@ class _ScamsPageState extends State<ScamsPage>
   @override
   void initState() {
     super.initState();
-    _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final localeCode = Localizations.localeOf(context).languageCode;
-    if (localeCode != _languageCode) {
-      _languageCode = localeCode;
-      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
-    }
+    _futureGroups = _service.fetchGroupedAlerts(limit: 30);
   }
 
   void _refresh() {
     setState(() {
-      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+      _futureGroups = _service.fetchGroupedAlerts(limit: 30);
     });
   }
 
@@ -66,8 +59,6 @@ class _ScamsPageState extends State<ScamsPage>
   Widget build(BuildContext context) {
     super.build(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final text = AppText.of(context);
-    final localeCode = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -84,12 +75,10 @@ class _ScamsPageState extends State<ScamsPage>
       body: FutureBuilder<List<ScamAlertGroup>>(
         future: _futureGroups,
         builder: (context, snapshot) {
-          // ── Loading ────────────────────────────────────────────────────────
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return _LoadingList();
+            return const _LoadingList();
           }
 
-          // ── Error ──────────────────────────────────────────────────────────
           if (snapshot.hasError) {
             return _FullPageError(
               message: '${snapshot.error}',
@@ -97,35 +86,20 @@ class _ScamsPageState extends State<ScamsPage>
             );
           }
 
-          final groups = snapshot.data ?? [];
-
-          // ── Empty ──────────────────────────────────────────────────────────
+          final groups = snapshot.data ?? const <ScamAlertGroup>[];
           if (groups.isEmpty) {
             return _FullPageError(
               message:
-                  '⚠️ Unable to fetch latest scam alerts.\nPlease check your connection or try again.',
+                  'Unable to fetch latest scam alerts. Please check your connection and try again.',
               onRetry: _refresh,
             );
           }
 
-          final alerts = snapshot.data ?? [];
-          if (alerts.isEmpty) {
-            return Center(child: Text(text.noScamAlerts));
-          }
-
-          // ── Category sections ──────────────────────────────────────────────
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             itemCount: groups.length,
             itemBuilder: (context, index) {
-              final alert = alerts[index];
-              return _ScamTile(
-                alert: alert,
-                localeCode: localeCode,
-                text: text,
-              );
-              final group = groups[index];
-              return _CategorySection(group: group);
+              return _CategorySection(group: groups[index]);
             },
           );
         },
@@ -134,26 +108,24 @@ class _ScamsPageState extends State<ScamsPage>
   }
 }
 
-// ── Category section (header + alert card list) ───────────────────────────────
-
 class _CategorySection extends StatelessWidget {
   final ScamAlertGroup group;
+
   const _CategorySection({required this.group});
 
   @override
   Widget build(BuildContext context) {
     final meta =
         _categoryMeta[group.category] ??
-        const _CategoryMeta(icon: '⚠️', color: Color(0xFF4A4A4A));
+        const _CategoryMeta(icon: 'warning', color: Color(0xFF4A4A4A));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
-        // ── Section header ─────────────────────────────────────────────────
         Row(
           children: [
-            Text(meta.icon, style: const TextStyle(fontSize: 18)),
+            Icon(_iconFromName(meta.icon), size: 18, color: meta.color),
             const SizedBox(width: 8),
             Text(
               group.category.toUpperCase(),
@@ -183,44 +155,22 @@ class _CategorySection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        // ── Alert tiles ────────────────────────────────────────────────────
         ...group.alerts.map((alert) => _ScamTile(alert: alert)),
       ],
     );
   }
 }
 
-// ── Individual alert tile ─────────────────────────────────────────────────────
-
 class _ScamTile extends StatelessWidget {
   final ScamAlert alert;
-  final String localeCode;
-  final AppText text;
 
-  const _ScamTile({
-    required this.alert,
-    required this.localeCode,
-    required this.text,
-  });
   const _ScamTile({required this.alert});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    // Determine risk style
-    Color riskColor;
-    Color riskBg;
-    if (alert.riskLevel.toLowerCase() == 'high') {
-      riskColor = const Color(0xFF8C1D18);
-      riskBg = const Color(0xFFFCDAD7);
-    } else if (alert.riskLevel.toLowerCase() == 'medium') {
-      riskColor = const Color(0xFF7A4F00);
-      riskBg = const Color(0xFFFFF0C5);
-    } else {
-      riskColor = const Color(0xFF1A5E20);
-      riskBg = const Color(0xFFD7EDCA);
-    }
+    final text = AppText.of(context);
+    final localeCode = Localizations.localeOf(context).languageCode;
     final riskStyle = _riskStyle(alert.riskLevel);
     final confStyle = _confidenceStyle(alert.confidenceLevel);
 
@@ -233,43 +183,23 @@ class _ScamTile extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _showDetails(context, alert),
+        onTap: () => _showDetails(context, alert, text),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Top row: risk badge | confidence dot | date ───────────────
               Row(
                 children: [
-                  // Risk level pill
                   _SmallBadge(
-                    label: '${alert.riskLevel} Risk',
+                    label: '${alert.riskLevel} ${text.risk}',
                     bg: riskStyle.bg,
                     fg: riskStyle.fg,
                   ),
                   const SizedBox(width: 6),
-                  // Confidence dot + label
                   _ConfidenceDot(
                     level: alert.confidenceLevel,
                     color: confStyle.color,
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: riskBg,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${alert.riskLevel} ${text.risk}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: riskColor,
-                      ),
-                    ),
                   ),
                   const Spacer(),
                   Text(
@@ -282,7 +212,6 @@ class _ScamTile extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              // ── Title ──────────────────────────────────────────────────────
               Text(
                 alert.title,
                 style: const TextStyle(
@@ -292,7 +221,6 @@ class _ScamTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              // ── Description ────────────────────────────────────────────────
               Text(
                 alert.description,
                 maxLines: 3,
@@ -304,7 +232,6 @@ class _ScamTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              // ── Footer: source label ───────────────────────────────────────
               Row(
                 children: [
                   Icon(Icons.sensors, size: 12, color: colorScheme.primary),
@@ -330,11 +257,13 @@ class _ScamTile extends StatelessWidget {
   }
 
   String _formatDate(DateTime? date, String localeCode) {
-    if (date == null) return '';
+    if (date == null) {
+      return '';
+    }
     return DateFormat('MMM dd, yyyy', localeCode).format(date);
   }
 
-  void _showDetails(BuildContext context, ScamAlert alert) {
+  void _showDetails(BuildContext context, ScamAlert alert, AppText text) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -344,14 +273,11 @@ class _ScamTile extends StatelessWidget {
   }
 }
 
-// ── Detail bottom sheet ───────────────────────────────────────────────────────
-
 class _ScamDetailsSheet extends StatelessWidget {
   final ScamAlert alert;
   final AppText text;
 
   const _ScamDetailsSheet({required this.alert, required this.text});
-  const _ScamDetailsSheet({required this.alert});
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +285,7 @@ class _ScamDetailsSheet extends StatelessWidget {
     final confStyle = _confidenceStyle(alert.confidenceLevel);
     final meta =
         _categoryMeta[alert.category] ??
-        const _CategoryMeta(icon: '⚠️', color: Color(0xFF4A4A4A));
+        const _CategoryMeta(icon: 'warning', color: Color(0xFF4A4A4A));
 
     return DraggableScrollableSheet(
       initialChildSize: 0.55,
@@ -374,7 +300,6 @@ class _ScamDetailsSheet extends StatelessWidget {
           controller: controller,
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
           children: [
-            // Handle bar
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -388,10 +313,9 @@ class _ScamDetailsSheet extends StatelessWidget {
                 ),
               ),
             ),
-            // Category chip
             Row(
               children: [
-                Text(meta.icon, style: const TextStyle(fontSize: 16)),
+                Icon(_iconFromName(meta.icon), size: 16, color: meta.color),
                 const SizedBox(width: 6),
                 _SmallBadge(
                   label: alert.category,
@@ -399,7 +323,6 @@ class _ScamDetailsSheet extends StatelessWidget {
                   fg: meta.color,
                 ),
                 const Spacer(),
-                // Confidence badge
                 _SmallBadge(
                   label: '${confStyle.dot} ${alert.confidenceLevel} Confidence',
                   bg: confStyle.color.withValues(alpha: 0.12),
@@ -408,7 +331,6 @@ class _ScamDetailsSheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            // Title
             Text(
               alert.title,
               style: const TextStyle(
@@ -417,48 +339,36 @@ class _ScamDetailsSheet extends StatelessWidget {
                 height: 1.3,
               ),
             ),
-            const SizedBox(height: 6),
-            // Source + date
+            const SizedBox(height: 12),
             Text(
-              'Source: ${alert.source}   ·   ${_formatDate(alert.publishedDate)}',
+              alert.description,
+              style: TextStyle(
+                fontSize: 14,
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              text.protectYourself,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _tipRow(context, text.tipVerify),
+            _tipRow(context, text.tipNoLinks),
+            _tipRow(context, text.tipReport),
+            const SizedBox(height: 16),
+            Text(
+              'Source: ${alert.source}',
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
               ),
-            ),
-            const SizedBox(height: 16),
-            // Description
-            Text(
-              alert.description,
-              style: const TextStyle(fontSize: 15, height: 1.55),
-            ),
-            const SizedBox(height: 24),
-            // Protection tips
-            Text(
-              'HOW TO PROTECT YOURSELF',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildTip(
-              Icons.verified_user,
-              'Verify through official Govt. channels (india.gov.in).',
-            ),
-            _buildTip(
-              Icons.link_off,
-              'Never click on suspicious links in SMS or WhatsApp.',
-            ),
-            _buildTip(
-              Icons.security,
-              'Report scams to 1930 (Cyber Crime Helpline).',
-            ),
-            _buildTip(
-              Icons.block,
-              'Never share OTP, Aadhaar, or banking credentials.',
             ),
           ],
         ),
@@ -466,23 +376,27 @@ class _ScamDetailsSheet extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Unknown date';
-    return DateFormat('MMM dd, yyyy').format(date);
-  }
-
-  Widget _buildTip(IconData icon, String text) {
+  Widget _tipRow(BuildContext context, String message) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.blue),
-          const SizedBox(width: 12),
+          Icon(
+            Icons.check_circle_outline,
+            size: 16,
+            color: colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
-              text,
-              style: const TextStyle(fontSize: 13, height: 1.4),
+              message,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: colorScheme.onSurface,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -491,25 +405,24 @@ class _ScamDetailsSheet extends StatelessWidget {
   }
 }
 
-// ── Helper widgets ────────────────────────────────────────────────────────────
-
 class _SmallBadge extends StatelessWidget {
   final String label;
   final Color bg;
   final Color fg;
+
   const _SmallBadge({required this.label, required this.bg, required this.fg});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: fg),
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: fg),
       ),
     );
   }
@@ -518,6 +431,7 @@ class _SmallBadge extends StatelessWidget {
 class _ConfidenceDot extends StatelessWidget {
   final String level;
   final Color color;
+
   const _ConfidenceDot({required this.level, required this.color});
 
   @override
@@ -526,17 +440,16 @@ class _ConfidenceDot extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 7,
-          height: 7,
+          width: 8,
+          height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(
-          '$level Conf.',
+          level,
           style: TextStyle(
             fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: color,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -544,30 +457,10 @@ class _ConfidenceDot extends StatelessWidget {
   }
 }
 
-// ── Confidence style ──────────────────────────────────────────────────────────
-
-class _ConfStyle {
-  final Color color;
-  final String dot;
-  const _ConfStyle({required this.color, required this.dot});
-}
-
-_ConfStyle _confidenceStyle(String level) {
-  switch (level) {
-    case 'High':
-      return const _ConfStyle(color: Color(0xFFB71C1C), dot: '🔴');
-    case 'Medium':
-      return const _ConfStyle(color: Color(0xFF7A4F00), dot: '🟡');
-    default:
-      return const _ConfStyle(color: Color(0xFF1A5E20), dot: '🟢');
-  }
-}
-
-// ── Risk level style ──────────────────────────────────────────────────────────
-
 class _RiskStyle {
   final Color bg;
   final Color fg;
+
   const _RiskStyle({required this.bg, required this.fg});
 }
 
@@ -582,29 +475,64 @@ _RiskStyle _riskStyle(String level) {
   }
 }
 
-// ── Full-page error widget ────────────────────────────────────────────────────
+class _ConfidenceStyle {
+  final Color color;
+  final String dot;
+
+  const _ConfidenceStyle({required this.color, required this.dot});
+}
+
+_ConfidenceStyle _confidenceStyle(String level) {
+  switch (level.toLowerCase()) {
+    case 'high':
+      return const _ConfidenceStyle(color: Color(0xFFB71C1C), dot: 'H');
+    case 'medium':
+      return const _ConfidenceStyle(color: Color(0xFF7A4F00), dot: 'M');
+    default:
+      return const _ConfidenceStyle(color: Color(0xFF1A5E20), dot: 'L');
+  }
+}
+
+class _LoadingList extends StatelessWidget {
+  const _LoadingList();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 5,
+      itemBuilder: (_, __) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        height: 120,
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+}
 
 class _FullPageError extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
+
   const _FullPageError({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, height: 1.5),
-            ),
-            const SizedBox(height: 20),
+            const Icon(Icons.warning_amber_rounded, size: 40),
+            const SizedBox(height: 12),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 14),
             FilledButton.tonal(onPressed: onRetry, child: const Text('Retry')),
           ],
         ),
@@ -613,58 +541,21 @@ class _FullPageError extends StatelessWidget {
   }
 }
 
-// ── Skeleton loading list ─────────────────────────────────────────────────────
-
-class _LoadingList extends StatefulWidget {
-  @override
-  State<_LoadingList> createState() => _LoadingListState();
-}
-
-class _LoadingListState extends State<_LoadingList>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    )..repeat(reverse: true);
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (context, _) {
-        final opacity = 0.3 + (_anim.value * 0.45);
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          itemCount: 6,
-          itemBuilder: (context2, index2) => Opacity(
-            opacity: opacity,
-            child: Container(
-              height: 110,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        );
-      },
-    );
+IconData _iconFromName(String name) {
+  switch (name) {
+    case 'money':
+      return Icons.currency_rupee;
+    case 'phishing':
+      return Icons.phishing;
+    case 'chat':
+      return Icons.chat_bubble_outline;
+    case 'trending_up':
+      return Icons.trending_up;
+    case 'work':
+      return Icons.work_outline;
+    case 'local_shipping':
+      return Icons.local_shipping_outlined;
+    default:
+      return Icons.warning_amber_outlined;
   }
 }

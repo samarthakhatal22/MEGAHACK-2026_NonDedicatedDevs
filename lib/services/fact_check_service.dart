@@ -167,18 +167,15 @@ const Map<String, Map<String, List<String>>> kOfficialSocialSources = {
 };
 
 class FactCheckService {
-  final String? apiKey;
-  static const String _baseUrl =
-      'https://api.groq.com/openai/v1/chat/completions';
   final String apiKey;
   static const String _baseUrl =
       'https://api.groq.com/openai/v1/chat/completions';
   static const String _model = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
-  FactCheckService({this.apiKey});
+  FactCheckService({String? apiKey})
+    : apiKey = apiKey ?? const String.fromEnvironment('GROQ_API_KEY');
 
-  String get _effectiveApiKey =>
-      apiKey ?? const String.fromEnvironment('GROQ_API_KEY');
+  String get _effectiveApiKey => apiKey;
 
   // ADDED: Helper function to flatten the map into a formatted string
   String _buildSourceContext() {
@@ -202,11 +199,6 @@ class FactCheckService {
           imageBytes == null &&
           imageUrl == null) {
         throw ArgumentError('Must provide text, image bytes, or an image URL.');
-      }
-
-      final inputText = (text ?? '').trim();
-      if (apiKey.trim().isEmpty) {
-        return _fallbackResult(inputText, reason: 'API key missing');
       }
 
       final inputText = (text ?? '').trim();
@@ -336,39 +328,6 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
 
   bool _containsDevanagari(String value) {
     return RegExp(r'[\u0900-\u097F]').hasMatch(value);
-  }
-
-  // ADDED: Method to get deeper context and verification details based on history
-  Future<String> getDeepAnalysis(
-    List<Map<String, dynamic>> conversationHistory,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Authorization': 'Bearer $apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': _model,
-          'messages': conversationHistory,
-          'temperature': 0.3,
-        }),
-      );
-
-      if (response.statusCode != 200) {
-        final error = jsonDecode(response.body);
-        throw Exception(
-          'Groq API Error: ${error['error']['message'] ?? response.body}',
-        );
-      }
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      return data['choices'][0]['message']['content'];
-    } catch (e) {
-      debugPrint('CRITICAL: FactCheckService getDeepAnalysis Error: $e');
-      throw Exception('Failed to get deeper analysis: $e');
-    }
   }
 
   // ADDED: Method to get deeper context and verification details based on history

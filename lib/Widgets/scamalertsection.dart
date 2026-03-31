@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../one/localization/app_text.dart';
 import '../models/scamalert.dart';
 import '../services/multi_source_scam_service.dart';
@@ -31,7 +30,7 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
   @override
   void initState() {
     super.initState();
-    _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+    _futureAlerts = _service.fetchScamAlerts(limit: 5);
   }
 
   @override
@@ -40,14 +39,12 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
     final localeCode = Localizations.localeOf(context).languageCode;
     if (localeCode != _languageCode) {
       _languageCode = localeCode;
-      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
+      _futureAlerts = _service.fetchScamAlerts(limit: 5);
     }
-    _futureAlerts = _service.fetchScamAlerts(limit: 5);
   }
 
   void _refresh() {
     setState(() {
-      _futureAlerts = _service.fetchScamAlerts(languageCode: _languageCode);
       _futureAlerts = _service.fetchScamAlerts(limit: 5);
     });
   }
@@ -99,7 +96,6 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
 
               if (snapshot.hasError) {
                 return _ErrorCard(
-                  message: 'Could not load scam alerts.',
                   message: '${text.errorPrefix}: ${snapshot.error}',
                   retryLabel: text.retry,
                   onRetry: _refresh,
@@ -115,14 +111,16 @@ class _ScamAlertSectionState extends State<ScamAlertSection> {
                 );
               }
 
-              final displayed = alerts.length > 3 ? alerts.sublist(0, 3) : alerts;
+              final displayed = alerts.length > 3
+                  ? alerts.sublist(0, 3)
+                  : alerts;
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(right: 4),
-                itemCount: alerts.length > 3 ? 3 : alerts.length,
+                itemCount: displayed.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) => _AlertCard(
-                  alert: alerts[index],
+                  alert: displayed[index],
                   text: text,
                   localeCode: localeCode,
                 ),
@@ -156,10 +154,9 @@ class _AlertCard extends StatelessWidget {
       320.0,
     );
     final riskStyle = _riskStyle(alert.riskLevel);
-    final width       = (MediaQuery.of(context).size.width * 0.80).clamp(240.0, 320.0);
-    final riskStyle   = _riskStyle(alert.riskLevel);
-    final confStyle   = _confidenceStyle(alert.confidenceLevel);
-    final meta        = _categoryMeta[alert.category] ??
+    final confStyle = _confidenceStyle(alert.confidenceLevel);
+    final meta =
+        _categoryMeta[alert.category] ??
         const _CategoryMeta(icon: '⚠️', color: Color(0xFF4A4A4A));
 
     return Container(
@@ -185,10 +182,9 @@ class _AlertCard extends StatelessWidget {
             children: [
               // Risk badge
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: riskStyle.badgebBg,
+                  color: riskStyle.bg,
                   borderRadius: BorderRadius.circular(7),
                 ),
                 child: Text(
@@ -202,22 +198,27 @@ class _AlertCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               // Confidence dot
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: confStyle.color,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '${alert.riskLevel} ${text.risk}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: riskStyle.badgeText,
-                    letterSpacing: 0.3,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: confStyle.color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 4),
+                  Text(
+                    confStyle.label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
               const Spacer(),
               Text(
@@ -312,8 +313,18 @@ class _AlertCard extends StatelessWidget {
   String _formatDate(DateTime? date, String localeCode) {
     if (date == null) return '';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -322,18 +333,18 @@ class _AlertCard extends StatelessWidget {
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 const Map<String, _CategoryMeta> _categoryMeta = {
-  'UPI Fraud':       _CategoryMeta(icon: '💰', color: Color(0xFF8C1D18)),
-  'Phishing':        _CategoryMeta(icon: '🎣', color: Color(0xFF6A1E5A)),
-  'WhatsApp Scam':   _CategoryMeta(icon: '📱', color: Color(0xFF0D47A1)),
+  'UPI Fraud': _CategoryMeta(icon: '💰', color: Color(0xFF8C1D18)),
+  'Phishing': _CategoryMeta(icon: '🎣', color: Color(0xFF6A1E5A)),
+  'WhatsApp Scam': _CategoryMeta(icon: '📱', color: Color(0xFF0D47A1)),
   'Investment Scam': _CategoryMeta(icon: '📈', color: Color(0xFF7A4F00)),
-  'Job Scam':        _CategoryMeta(icon: '🎓', color: Color(0xFF1A5E20)),
-  'Delivery Scam':   _CategoryMeta(icon: '📦', color: Color(0xFF37474F)),
-  'Other':           _CategoryMeta(icon: '⚠️', color: Color(0xFF4A4A4A)),
+  'Job Scam': _CategoryMeta(icon: '🎓', color: Color(0xFF1A5E20)),
+  'Delivery Scam': _CategoryMeta(icon: '📦', color: Color(0xFF37474F)),
+  'Other': _CategoryMeta(icon: '⚠️', color: Color(0xFF4A4A4A)),
 };
 
 class _CategoryMeta {
   final String icon;
-  final Color  color;
+  final Color color;
   const _CategoryMeta({required this.icon, required this.color});
 }
 
@@ -342,28 +353,41 @@ class _RiskStyle {
   final Color fg;
   const _RiskStyle({required this.bg, required this.fg});
 }
-    return DateFormat('MMM d', localeCode).format(date);
-  }
 
 _RiskStyle _riskStyle(String level) {
   switch (level.toLowerCase()) {
-    case 'high':   return const _RiskStyle(bg: Color(0xFFFCDAD7), fg: Color(0xFF8C1D18));
-    case 'medium': return const _RiskStyle(bg: Color(0xFFFFF0C5), fg: Color(0xFF7A4F00));
-    default:       return const _RiskStyle(bg: Color(0xFFD7EDCA), fg: Color(0xFF1A5E20));
+    case 'high':
+      return const _RiskStyle(bg: Color(0xFFFCDAD7), fg: Color(0xFF8C1D18));
+    case 'medium':
+      return const _RiskStyle(bg: Color(0xFFFFF0C5), fg: Color(0xFF7A4F00));
+    default:
+      return const _RiskStyle(bg: Color(0xFFD7EDCA), fg: Color(0xFF1A5E20));
   }
 }
 
 class _ConfidenceStyle {
-  final Color  color;
+  final Color color;
   final String label;
   const _ConfidenceStyle({required this.color, required this.label});
 }
 
 _ConfidenceStyle _confidenceStyle(String level) {
   switch (level) {
-    case 'High':   return const _ConfidenceStyle(color: Color(0xFFB71C1C), label: 'High Conf.');
-    case 'Medium': return const _ConfidenceStyle(color: Color(0xFF7A4F00), label: 'Med. Conf.');
-    default:       return const _ConfidenceStyle(color: Color(0xFF1A5E20), label: 'Low Conf.');
+    case 'High':
+      return const _ConfidenceStyle(
+        color: Color(0xFFB71C1C),
+        label: 'High Conf.',
+      );
+    case 'Medium':
+      return const _ConfidenceStyle(
+        color: Color(0xFF7A4F00),
+        label: 'Med. Conf.',
+      );
+    default:
+      return const _ConfidenceStyle(
+        color: Color(0xFF1A5E20),
+        label: 'Low Conf.',
+      );
   }
 }
 
@@ -377,7 +401,7 @@ class _LoadingShimmer extends StatefulWidget {
 class _LoadingShimmerState extends State<_LoadingShimmer>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
-  late Animation<double>   _anim;
+  late Animation<double> _anim;
 
   @override
   void initState() {
