@@ -1,7 +1,6 @@
 {
   "version": "0.2.0",
   "configurations": [
-
     {
       "name": "Flutter: Policy Search (Debug)",
       "request": "launch",
@@ -9,8 +8,7 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "args": [
-        "--dart-define=POLICY_SEARCH_BASE_URL=https://your-api-endpoint.com/search",
-        "--dart-define=API_KEY=50840b1b7ea54b65ada87041574d4eb4"
+        "--dart-define=POLICY_SEARCH_BASE_URL=https://your-api-endpoint.com/search"
       ]
     },
     {
@@ -20,8 +18,7 @@
       "program": "lib/main.dart",
       "flutterMode": "profile",
       "args": [
-        "--dart-define=POLICY_SEARCH_BASE_URL=https://your-api-endpoint.com/search",
-        "--dart-define=API_KEY=50840b1b7ea54b65ada87041574d4eb4"
+        "--dart-define=POLICY_SEARCH_BASE_URL=https://your-api-endpoint.com/search"
       ]
     }
   ]

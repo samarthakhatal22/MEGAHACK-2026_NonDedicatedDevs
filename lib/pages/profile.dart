@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../one/providers/theme_provider.dart';
+import 'full_history.dart';
  
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -118,26 +119,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                 isLast: true,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSectionCard(
-                          context,
-                          title: 'App',
-                          children: [
-                            _buildNavTile(context,
-                                icon: Icons.help_outline,
-                                label: 'Help & support',
-                                onTap: () {}),
-                            _buildNavTile(context,
-                                icon: Icons.info_outline,
-                                label: 'About Civic-Shield',
-                                onTap: () {}),
-                            _buildNavTile(context,
-                                icon: Icons.privacy_tip_outlined,
-                                label: 'Privacy policy',
-                                onTap: () {},
-                                isLast: true),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -587,21 +568,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         
-        if (_searchQuery.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Center(
-              child: Column(
-                children: [
-                   Icon(Icons.search_off_outlined, color: Colors.grey, size: 40),
-                   SizedBox(height: 8),
-                   Text('Type to search policy history', 
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
-                ],
-              ),
-            ),
-          )
-        else
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('fact_checks')
@@ -641,11 +607,13 @@ class _ProfilePageState extends State<ProfilePage> {
             }).toList();
             
             if (docs.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Center(
-                  child: Text('No fact checks yet', 
-                    style: TextStyle(fontSize: 13, color: Colors.grey)),
+                  child: Text(
+                    _searchQuery.isEmpty ? 'No history yet' : 'No results found', 
+                    style: const TextStyle(fontSize: 13, color: Colors.grey)
+                  ),
                 ),
               );
             }
@@ -742,7 +710,10 @@ class _ProfilePageState extends State<ProfilePage> {
             label: 'View full history',
             isLast: true,
             onTap: () {
-              // Navigate to a dedicated history page if needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FullHistoryScreen()),
+              );
             },
           ),
       ],
