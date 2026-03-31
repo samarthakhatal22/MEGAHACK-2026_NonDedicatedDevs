@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 class CloudinaryService {
-  final String cloudName = 'dcvilamrq';
-  final String uploadPreset = 'CivicShield';
+  final String cloudName = const String.fromEnvironment('CLOUDINARY_CLOUD_NAME', defaultValue: 'dcvilamrq');
+  final String uploadPreset = const String.fromEnvironment('CLOUDINARY_UPLOAD_PRESET', defaultValue: 'CivicShield');
 
   /// Uploads an image file to Cloudinary using a multipart request.
   /// Returns the secure_url if successful, null otherwise.

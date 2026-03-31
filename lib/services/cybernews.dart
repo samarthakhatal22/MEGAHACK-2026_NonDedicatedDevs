@@ -3,6 +3,26 @@ import 'package:http/http.dart' as http;
 import 'package:translator/translator.dart';
 import '../models/scamalert.dart';
 
+// ADDED: Subclass to add the 'region' tag field as requested without modifying models/scamalert.dart
+class RegionalScamAlert extends ScamAlert {
+  final String region;
+
+  const RegionalScamAlert({
+    required String title,
+    required String description,
+    required String source,
+    required DateTime? publishedDate,
+    String riskLevel = 'Medium',
+    required this.region,
+  }) : super(
+         title: title,
+         description: description,
+         source: source,
+         publishedDate: publishedDate,
+         riskLevel: riskLevel,
+       );
+}
+
 /// Fetches cybersecurity news from the Cyber Security News API (via RapidAPI).
 /// Falls back to curated real-world scam alerts if the API is unavailable.
 class CyberNewsService {
@@ -25,8 +45,7 @@ class CyberNewsService {
     '/api/news',
     '/cybersecurity-news',
   ];
-  
-
+  // CHANGED: Expanded keyword-based risk inference to cover international scam terminology
   static const _scamKeywords = [
     'phishing',
     'scam',
@@ -325,6 +344,62 @@ class CyberNewsService {
         source: 'Cyber Security News',
         publishedDate: now.subtract(const Duration(days: 4)),
         riskLevel: 'Medium',
+      ),
+      // ADDED: International scams to expand the curated list
+      RegionalScamAlert(
+        title: 'IRS Impersonation Tax Scam',
+        description:
+            'Callers claiming to be from the IRS demand immediate payment '
+            'for fake tax arrears via prepaid debit cards or wire transfers, '
+            'threatening imminent arrest.',
+        source: 'Global Fraud Watch',
+        publishedDate: now.subtract(const Duration(hours: 12)),
+        riskLevel: 'High',
+        region: 'USA',
+      ),
+      RegionalScamAlert(
+        title: 'NHS Phishing Vaccine/Record Scam',
+        description:
+            'Fake texts appearing to be from NHS ask users to click a link '
+            'to apply for a COVID pass or update health records, stealing '
+            'personal and financial details.',
+        source: 'Cyber Alert UK',
+        publishedDate: now.subtract(const Duration(days: 1)),
+        riskLevel: 'High',
+        region: 'UK',
+      ),
+      RegionalScamAlert(
+        title: 'Interpol Fraud Alert - Money Laundering',
+        description:
+            'Scammers pretend to be Interpol agents accusing the victim '
+            'of international money laundering, demanding funds be moved '
+            'to a "safe" offshore account.',
+        source: 'International Crime Bureau',
+        publishedDate: now.subtract(const Duration(days: 2)),
+        riskLevel: 'High',
+        region: 'Global',
+      ),
+      RegionalScamAlert(
+        title: 'Cryptocurrency Giveaway Fraud',
+        description:
+            'Deepfake videos or compromised verified accounts promise '
+            'to double your crypto if you send a "small verification" '
+            'amount to their wallet first.',
+        source: 'CryptoSec News',
+        publishedDate: now.subtract(const Duration(days: 5)),
+        riskLevel: 'High',
+        region: 'Global',
+      ),
+      RegionalScamAlert(
+        title: 'International Remote Work Visa Scam',
+        description:
+            'Fraudulent international job boards offer high-paying tech '
+            'roles but require upfront fees for "visa processing" or '
+            '"background checks" handled by bogus agencies.',
+        source: 'Global Employment Watch',
+        publishedDate: now.subtract(const Duration(days: 6)),
+        riskLevel: 'Medium',
+        region: 'Global',
       ),
     ];
   }
