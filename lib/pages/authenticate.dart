@@ -29,17 +29,11 @@ class _AuthenticatePageState extends State<AuthenticatePage>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -66,8 +60,8 @@ class _AuthenticatePageState extends State<AuthenticatePage>
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
 
       if (mounted && userCredential.user != null) {
         Navigator.pushReplacement(
@@ -102,10 +96,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.premiumNavy,
-              AppColors.darkNavy,
-            ],
+            colors: [AppColors.premiumNavy, AppColors.darkNavy],
           ),
         ),
         child: SafeArea(
@@ -148,7 +139,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
                       const SizedBox(height: 28),
 
                       // Title
-                       Text(
+                      Text(
                         "CivicShield",
                         style: GoogleFonts.outfit(
                           fontSize: 40,
@@ -174,7 +165,9 @@ class _AuthenticatePageState extends State<AuthenticatePage>
 
                       // Google Sign In
                       GradientButton(
-                        text: _isLoading ? "Signing in..." : "Continue with Google",
+                        text: _isLoading
+                            ? "Signing in..."
+                            : "Continue with Google",
                         icon: _isLoading ? null : Icons.login,
                         isLoading: _isLoading,
                         onPressed: _handleGoogleSignIn,
@@ -214,6 +207,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
                       // Email Sign In
                       GradientOutlinedButton(
                         text: "Sign In with Email",
+
                         icon: Icons.email_outlined,
                         onPressed: () {
                           Navigator.push(

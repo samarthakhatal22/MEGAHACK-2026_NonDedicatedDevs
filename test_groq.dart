@@ -3,10 +3,9 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 Future<void> main() async {
-  final String apiKey =
-      const String.fromEnvironment('GROQ_API_KEY').isNotEmpty
-          ? const String.fromEnvironment('GROQ_API_KEY')
-          : (Platform.environment['GROQ_API_KEY'] ?? '').trim();
+  final String apiKey = const String.fromEnvironment('GROQ_API_KEY').isNotEmpty
+      ? const String.fromEnvironment('GROQ_API_KEY')
+      : (Platform.environment['GROQ_API_KEY'] ?? '').trim();
 
   if (apiKey.isEmpty) {
     print(

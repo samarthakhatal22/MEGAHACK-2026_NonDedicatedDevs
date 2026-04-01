@@ -56,7 +56,8 @@ class GradientButton extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            padding: padding ??
+            padding:
+                padding ??
                 const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
             elevation: 0,
           ),
@@ -79,7 +80,8 @@ class GradientButton extends StatelessWidget {
                     ],
                     Text(
                       text,
-                      style: textStyle ??
+                      style:
+                          textStyle ??
                           const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -119,7 +121,7 @@ class GradientOutlinedButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primaryIndigo,
+          foregroundColor: Colors.white,
           side: const BorderSide(color: AppColors.electricBlue, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
