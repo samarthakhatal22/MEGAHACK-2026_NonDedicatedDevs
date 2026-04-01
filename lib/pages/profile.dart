@@ -40,8 +40,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null)
+    if (user == null) {
       return const Scaffold(body: Center(child: Text('Please log in')));
+    }
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
@@ -588,7 +589,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderSide: BorderSide(color: colorScheme.outlineVariant),
               ),
               filled: true,
-              fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              fillColor: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
             ),
           ),
         ),
@@ -671,11 +674,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 final query = data['queryText'] ?? 'Unknown query';
                 final imageUrl = data['imageUrl'] as String?;
                 final timestamp = data['timestamp'] as Timestamp?;
-
-                // CHANGED: Null-safe reads for new fields (Change 4)
-                final socialSources =
-                    result?['socialSourcesChecked'] as List<dynamic>? ?? [];
-                final deepAnalysis = data['deepAnalysis'] as String? ?? '';
 
                 String timeStr = 'Recent';
                 if (timestamp != null) {

@@ -21,14 +21,17 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Welcome back, ${userCredential.user?.email}!')),
+          SnackBar(
+            content: Text('Welcome back, ${userCredential.user?.email}!'),
+          ),
         );
         Navigator.pushAndRemoveUntil(
           context,
@@ -39,7 +42,10 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Authentication failed.'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.message ?? 'Authentication failed.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -57,7 +63,12 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign In with Email')),
+      backgroundColor: const Color(0xFF0F172A),
+      appBar: AppBar(
+        //foregroundColor: Colors.white,
+        title: const Text('Sign In with Email'),
+        titleTextStyle: TextStyle(color: Colors.white),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -66,7 +77,11 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.lock, size: 80, color: Colors.blue),
+              const Icon(
+                Icons.lock,
+                size: 80,
+                color: Color.fromARGB(255, 255, 255, 255),
+              ),
               const SizedBox(height: 32),
               TextFormField(
                 controller: _emailController,
@@ -76,7 +91,9 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your email' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter your email'
+                    : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -87,15 +104,17 @@ class _EmailSignInPageState extends State<EmailSignInPage> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your password' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Please enter your password'
+                    : null,
               ),
               const SizedBox(height: 32),
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
-                  child: _isLoading 
-                      ? const CircularProgressIndicator() 
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
                       : const Text('Sign In', style: TextStyle(fontSize: 18)),
                 ),
               ),

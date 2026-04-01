@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../core/theme/app_colors.dart';
+import '../core/widgets/gradient_button.dart';
 import 'email_sign_in.dart';
 import 'email_sign_up.dart';
 import 'home.dart';
@@ -12,41 +15,54 @@ class AuthenticatePage extends StatefulWidget {
   State<AuthenticatePage> createState() => _AuthenticatePageState();
 }
 
-class _AuthenticatePageState extends State<AuthenticatePage> {
+class _AuthenticatePageState extends State<AuthenticatePage>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
-  // Optimized Google Sign In Method
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // 1. Trigger the Google authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
       if (googleUser == null) {
-        // User canceled the sign-in flow
         setState(() => _isLoading = false);
         return;
       }
 
-      // 2. Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-
-      // 3. Create a new credential for Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // 4. Sign in to Firebase with the credential
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential);
 
-      // 5. Navigate to Home on success
-      // 5. Navigate to Home on success
       if (mounted && userCredential.user != null) {
         Navigator.pushReplacement(
           context,
@@ -62,113 +78,182 @@ class _AuthenticatePageState extends State<AuthenticatePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred.')),
+          const SnackBar(content: Text('An unexpected error occurred.')),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        // Added Center for better layout
-        child: SingleChildScrollView(
-          // Added scroll view to prevent overflow on small screens
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.shield, size: 90, color: Colors.blue),
-              const SizedBox(height: 20),
-              const Text(
-                "Civic AI Navigator",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Fight Civic Misinformation\nAccess Government Services Easily",
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 50),
-
-              // Google Sign In Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.premiumNavy, AppColors.darkNavy],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: SlideTransition(
+                  position: _slideAnim,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Shield Icon with glow
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.electricBlue.withOpacity(0.3),
+                              AppColors.primaryIndigo.withOpacity(0.15),
+                            ],
                           ),
-                        )
-                      : const Icon(Icons.login),
-                  label: Text(
-                    _isLoading ? "Signing in..." : "Continue with Google",
-                  ),
-                  onPressed: _isLoading ? null : _handleGoogleSignIn,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text("OR", style: TextStyle(color: Colors.grey)),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Email Sign In Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.email),
-                  label: const Text("Sign In with Email"),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EmailSignInPage(),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.electricBlue.withOpacity(0.3),
+                              blurRadius: 40,
+                              spreadRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.shield,
+                          size: 54,
+                          color: Colors.white,
+                        ),
                       ),
-                    );
-                  },
-                ),
-              ),
+                      const SizedBox(height: 28),
 
-              const SizedBox(height: 16),
-
-              // Email Sign Up Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.person_add),
-                  label: const Text("Sign Up with Email"),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EmailSignUpPage(),
+                      // Title
+                      Text(
+                        "CivicShield",
+                        style: GoogleFonts.outfit(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -1.0,
+                        ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 10),
+
+                      // Subtitle
+                      Text(
+                        "Fight Misinformation • Access Services",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: Colors.white.withOpacity(0.6),
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 56),
+
+                      // Google Sign In
+                      GradientButton(
+                        text: _isLoading
+                            ? "Signing in..."
+                            : "Continue with Google",
+                        icon: _isLoading ? null : Icons.login,
+                        isLoading: _isLoading,
+                        onPressed: _handleGoogleSignIn,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Divider
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Email Sign In
+                      GradientOutlinedButton(
+                        text: "Sign In with Email",
+
+                        icon: Icons.email_outlined,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EmailSignInPage(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Email Sign Up
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const EmailSignUpPage(),
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.person_add_outlined,
+                            color: Colors.white.withOpacity(0.7),
+                            size: 20,
+                          ),
+                          label: Text(
+                            "Create an Account",
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

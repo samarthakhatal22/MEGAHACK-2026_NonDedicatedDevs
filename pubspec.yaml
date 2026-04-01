@@ -13,7 +13,11 @@ dependencies:
   firebase_messaging: ^16.1.2
   firebase_storage: ^13.1.0
   provider: ^6.1.2
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.2
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
   google_sign_in: ^6.2.1
   google_generative_ai: ^0.4.7
@@ -24,6 +28,7 @@ dependencies:
   intl: ^0.20.2
   webfeed: ^0.7.0
   flutter_dotenv: ^5.2.1
+  translator: ^1.0.4
 
 dependency_overrides:
   intl: ^0.20.2
