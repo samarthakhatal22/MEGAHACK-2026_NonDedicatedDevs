@@ -503,7 +503,7 @@ class _LoadingList extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: 5,
-      itemBuilder: (_, __) => Container(
+      itemBuilder: (_, _) => Container(
         margin: const EdgeInsets.only(bottom: 12),
         height: 120,
         decoration: BoxDecoration(

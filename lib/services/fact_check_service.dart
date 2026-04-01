@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/fact_result.dart';
 
 // ADDED: Constant map for official social sources organized by category
@@ -167,15 +170,20 @@ const Map<String, Map<String, List<String>>> kOfficialSocialSources = {
 };
 
 class FactCheckService {
-  final String apiKey;
+  final String? _injectedApiKey;
   static const String _baseUrl =
       'https://api.groq.com/openai/v1/chat/completions';
-  static const String _model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+  static const String _model = 'llama-3.3-70b-versatile';
 
-  FactCheckService({String? apiKey})
-    : apiKey = apiKey ?? const String.fromEnvironment('GROQ_API_KEY');
+  FactCheckService({String? apiKey}) : _injectedApiKey = apiKey;
 
-  String get _effectiveApiKey => apiKey;
+  String get _effectiveApiKey {
+    final key = _injectedApiKey != null && _injectedApiKey!.isNotEmpty
+        ? _injectedApiKey!
+        : (dotenv.env['GROQ_API_KEY'] ??
+              const String.fromEnvironment('GROQ_API_KEY'));
+    return key;
+  }
 
   // ADDED: Helper function to flatten the map into a formatted string
   String _buildSourceContext() {
@@ -202,7 +210,7 @@ class FactCheckService {
       }
 
       final inputText = (text ?? '').trim();
-      if (apiKey.trim().isEmpty) {
+      if (_effectiveApiKey.trim().isEmpty) {
         return _fallbackResult(inputText, reason: 'API key missing');
       }
 
@@ -245,22 +253,33 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
         });
       }
 
+      debugPrint('==== GROQ API REQUEST DEBUG ====');
+      debugPrint('Effective API Key: ${_effectiveApiKey.substring(0, math.min(_effectiveApiKey.length, 10))}...');
+      debugPrint('Model: $_model');
+      
+      final requestBody = jsonEncode({
+        'model': _model,
+        'messages': [
+          {'role': 'system', 'content': systemPrompt},
+          {'role': 'user', 'content': requestMessages},
+        ],
+        'response_format': {'type': 'json_object'},
+        'temperature': 0.1,
+      });
+      debugPrint('Request Body: $requestBody');
+
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
           'Authorization': 'Bearer $_effectiveApiKey',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'model': _model,
-          'messages': [
-            {'role': 'system', 'content': systemPrompt},
-            {'role': 'user', 'content': requestMessages},
-          ],
-          'response_format': {'type': 'json_object'},
-          'temperature': 0.1,
-        }),
-      );
+        body: requestBody,
+      ).timeout(const Duration(seconds: 30));
+
+      debugPrint('==== GROQ API RESPONSE ====');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode != 200) {
         String errorMessage = response.body;
@@ -274,28 +293,29 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
 
         final lowered = errorMessage.toLowerCase();
         if (response.statusCode == 401 || lowered.contains('invalid api key')) {
-          return _fallbackResult(inputText, reason: errorMessage);
+          return _fallbackResult(inputText, reason: 'Invalid or missing API key: $errorMessage');
         }
 
-        throw Exception('Groq API Error: $errorMessage');
+        return _fallbackResult(inputText, reason: 'HTTP ${response.statusCode}: $errorMessage');
       }
 
       final Map<String, dynamic> data = jsonDecode(response.body);
       final String responseText = data['choices'][0]['message']['content'];
+      debugPrint('Parsed Content: $responseText');
 
       final Map<String, dynamic> jsonMap = jsonDecode(responseText);
       // CHANGED: Extract mentioned handles into a new optional field
       List<String> extractedHandles = [];
-      kOfficialSocialSources.values.forEach((entities) {
-        entities.values.forEach((handles) {
+      for (var entities in kOfficialSocialSources.values) {
+        for (var handles in entities.values) {
           for (final handle in handles) {
             if (responseText.contains(handle) &&
                 !extractedHandles.contains(handle)) {
               extractedHandles.add(handle);
             }
           }
-        });
-      });
+        }
+      }
 
       // CHANGED: Returned FactResult with sources
       return FactResult.fromJson(
@@ -311,8 +331,8 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
   FactResult _fallbackResult(String inputText, {required String reason}) {
     final isHindi = _containsDevanagari(inputText);
     final explanation = isHindi
-        ? 'अभी तथ्य जांच सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया आधिकारिक स्रोत (PIB, भारत सरकार पोर्टल) से पुष्टि करें और थोड़ी देर बाद पुनः प्रयास करें।'
-        : 'Fact check service is temporarily unavailable. Please verify from official sources (PIB, Government of India portals) and try again shortly.';
+        ? 'अभी तथ्य जांच सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया आधिकारिक स्रोत (PIB, भारत सरकार पोर्टल) से पुष्टि करें और थोड़ी देर बाद पुनः प्रयास करें。\n\nकारण: $reason'
+        : 'Fact check service is temporarily unavailable. Please verify from official sources (PIB, Government of India portals) and try again shortly.\n\nReason: $reason';
 
     return FactResult(
       score: 0,
@@ -321,8 +341,8 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       references: const ['https://pib.gov.in', 'https://www.india.gov.in'],
       isAiGenerated: null,
       authenticityReason: isHindi
-          ? 'तकनीकी कारण: API असफल।'
-          : 'Technical reason: API request failed.',
+          ? 'तकनीकी कारण: $reason'
+          : 'Technical reason: $reason',
     );
   }
 
@@ -338,7 +358,7 @@ Do not include markdown blocks like ```json, just the raw JSON brackets.
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $_effectiveApiKey',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({

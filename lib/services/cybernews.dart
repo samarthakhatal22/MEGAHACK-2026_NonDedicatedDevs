@@ -8,19 +8,13 @@ class RegionalScamAlert extends ScamAlert {
   final String region;
 
   const RegionalScamAlert({
-    required String title,
-    required String description,
-    required String source,
-    required DateTime? publishedDate,
-    String riskLevel = 'Medium',
+    required super.title,
+    required super.description,
+    required super.source,
+    required super.publishedDate,
+    super.riskLevel,
     required this.region,
-  }) : super(
-         title: title,
-         description: description,
-         source: source,
-         publishedDate: publishedDate,
-         riskLevel: riskLevel,
-       );
+  });
 }
 
 /// Fetches cybersecurity news from the Cyber Security News API (via RapidAPI).

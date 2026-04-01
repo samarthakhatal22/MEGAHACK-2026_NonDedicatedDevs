@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' show ImageFilter;
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../core/theme/app_colors.dart';
 import '../services/fact_check_service.dart';
 import '../services/cloudinary_service.dart';
 import '../models/fact_result.dart';
@@ -372,13 +375,29 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fact Check assistant'),
+        title: Text(
+          'Civic Assistant',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
+        ),
+        centerTitle: true,
         elevation: 0,
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onSurface,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.premiumNavy,
+                AppColors.premiumNavy.withOpacity(0.0),
+              ],
+            ),
+          ),
+        ),
       ),
       body: _historyLoading
           ? const Center(child: CircularProgressIndicator())
@@ -464,44 +483,35 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
 
                 // Chat Input Area
                 Container(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    12,
-                    16,
-                    MediaQuery.of(context).padding.bottom + 12,
-                  ),
                   decoration: BoxDecoration(
-                    color: colorScheme.surface,
+                    color: isDark ? AppColors.premiumNavy : Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -5),
                       ),
                     ],
                   ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.3,
+                      color: isDark ? AppColors.darkNavy.withOpacity(0.8) : Colors.white,
+                      borderRadius: BorderRadius.circular(100),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
+                      ],
                     ),
                     child: Row(
                       children: [
                         IconButton(
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.add_a_photo_outlined,
-                            color: colorScheme.primary,
+                            color: AppColors.premiumGold,
                             size: 22,
                           ),
                           onPressed: () => _showImageSourceActionSheet(context),
@@ -532,7 +542,12 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                         const SizedBox(width: 4),
                         ScaleTransition(
                           scale: AlwaysStoppedAnimation(_isLoading ? 0.8 : 1.0),
-                          child: IconButton.filled(
+                          child: IconButton(
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.deepPurple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.all(12),
+                            ),
                             icon: _isLoading
                                 ? const SizedBox(
                                     width: 18,
@@ -591,6 +606,7 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
   Widget _buildChatBubble(ChatMessage message) {
     final isUser = message.role == MessageRole.user;
     final colorScheme = Theme.of(context).colorScheme;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -626,22 +642,39 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
+                          gradient: isUser
+                              ? const LinearGradient(
+                                  colors: [AppColors.deepPurple, AppColors.electricBlue],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
                           color: isUser
-                              ? colorScheme.primary.withValues(alpha: 0.9)
-                              : colorScheme.secondaryContainer.withValues(
-                                  alpha: 0.7,
-                                ),
+                              ? null
+                              : isDark
+                                  ? Colors.white.withOpacity(0.08)
+                                  : Colors.white,
                           border: Border.all(
                             color: isUser
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : colorScheme.outline.withValues(alpha: 0.1),
+                                ? Colors.white.withOpacity(0.1)
+                                : isDark
+                                    ? Colors.white.withOpacity(0.1)
+                                    : Colors.black.withOpacity(0.05),
                           ),
                           borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(20),
-                            topRight: const Radius.circular(20),
-                            bottomLeft: Radius.circular(isUser ? 20 : 4),
-                            bottomRight: Radius.circular(isUser ? 4 : 20),
+                            topLeft: const Radius.circular(22),
+                            topRight: const Radius.circular(22),
+                            bottomLeft: Radius.circular(isUser ? 22 : 4),
+                            bottomRight: Radius.circular(isUser ? 4 : 22),
                           ),
+                          boxShadow: [
+                            if (!isUser)
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,8 +703,9 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                                     fit: BoxFit.contain,
                                     loadingBuilder:
                                         (context, child, loadingProgress) {
-                                          if (loadingProgress == null)
+                                          if (loadingProgress == null) {
                                             return child;
+                                          }
                                           return Container(
                                             height: 200,
                                             color: colorScheme
@@ -689,11 +723,15 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
                             if (message.text.isNotEmpty)
                               Text(
                                 message.text,
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   color: isUser
-                                      ? colorScheme.onPrimary
-                                      : colorScheme.onSecondaryContainer,
+                                      ? Colors.white
+                                      : isDark
+                                          ? Colors.white.withOpacity(0.9)
+                                          : AppColors.textDark,
                                   fontSize: 15,
+                                  fontWeight: isUser ? FontWeight.w500 : FontWeight.w400,
+                                  height: 1.4,
                                 ),
                               ),
                           ],
@@ -820,320 +858,230 @@ class _FactCheckChatPageState extends State<FactCheckChatPage> {
     }
   }
 
-  // ADDED: Widget to display cross-referenced official handles
-  Widget _buildSourcesCrossReferenced(FactResult result) {
-    List<String>? sources = result.socialSourcesChecked;
 
-    if (sources == null || sources.isEmpty) {
-      return const SizedBox.shrink();
+  Widget _buildResultCard(FactResult result) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    IconData statusIcon;
+    Color statusColor;
+    
+    switch (result.status.toLowerCase().trim()) {
+      case 'authentic':
+      case 'success':
+        statusIcon = Icons.verified;
+        statusColor = AppColors.emeraldGreen;
+        break;
+      case 'counterfeit':
+      case 'error':
+      case 'fake':
+        statusIcon = Icons.dangerous;
+        statusColor = AppColors.crimsonRed;
+        break;
+      case 'misleading':
+      case 'warning':
+        statusIcon = Icons.warning;
+        statusColor = AppColors.amberWarning;
+        break;
+      default:
+        statusIcon = Icons.help_outline;
+        statusColor = AppColors.electricBlue;
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Card(
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withOpacity(0.5),
-            width: 1,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: statusColor.withOpacity(0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-        ),
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            title: Row(
-              children: [
-                Icon(
-                  Icons.verified,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Sources Cross-Referenced',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-              ],
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              color: statusColor.withOpacity(0.1),
+              child: Row(
+                children: [
+                  Icon(statusIcon, color: statusColor, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      result.status.toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: statusColor,
+                        letterSpacing: 1.2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      '${result.score}%',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: sources
-                      .map(
-                        (handle) => Chip(
-                          label: Text(
-                            handle,
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outlineVariant,
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (result.isAiGenerated == true) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.amberWarning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.amberWarning.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.psychology, color: AppColors.amberWarning, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'AI-Generated Content Detected',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.amberWarning,
+                              ),
                             ),
                           ),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surface,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Text(
+                    'Analysis Verdict',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    result.simpleDescription,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: isDark ? Colors.white.withOpacity(0.8) : Colors.black87,
+                    ),
+                  ),
+                  if (result.references.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      'Official Sources',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.premiumGold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: result.references.map((url) => InkWell(
+                        onTap: () => _launchURL(url),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.link, size: 14, color: AppColors.electricBlue),
+                              const SizedBox(width: 6),
+                              Text(
+                                'View Source',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.electricBlue,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      )
-                      .toList(),
-                ),
+                      )).toList(),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.95, 0.95));
   }
 
-  Widget _buildTypingIndicator() {
-    final colorScheme = Theme.of(context).colorScheme;
+  // ADDED: Collapsible Sources Cross-Referenced section
+  Widget _buildSourcesCrossReferenced(FactResult result) {
+    if (result.socialSourcesChecked == null || result.socialSourcesChecked!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
+      padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-                bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(20),
+          Text(
+            'Sources Cross-Referenced:',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            children: result.socialSourcesChecked!.map((source) => Chip(
+              label: Text(
+                source,
+                style: const TextStyle(fontSize: 10, color: Colors.white70),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Verifying claim...',
-                  style: TextStyle(
-                    color: colorScheme.onSecondaryContainer,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
+              backgroundColor: Colors.white.withOpacity(0.05),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+            )).toList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildResultCard(FactResult result) {
-    final colorScheme = Theme.of(context).colorScheme;
-    Color statusColor;
-    IconData statusIcon;
-
-    // CHANGED: Verdict Color Coding (Change 3)
-    switch (result.status.toLowerCase()) {
-      case 'true':
-        statusColor = Colors.green.shade600;
-        statusIcon = Icons.check_circle;
-        break;
-      case 'false':
-        statusColor = Colors.red.shade600;
-        statusIcon = Icons.cancel;
-        break;
-      case 'misleading':
-        statusColor = Colors.orange.shade600;
-        statusIcon = Icons.warning;
-        break;
-      default:
-        statusColor = Colors.grey.shade600;
-        statusIcon = Icons.help_outline;
-    }
-
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        // CHANGED: Left border accent based on verdict status color
-        decoration: BoxDecoration(
-          border: Border(left: BorderSide(color: statusColor, width: 6)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(statusIcon, color: statusColor, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    result.status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                    ),
-                  ),
-                  const Spacer(),
-                  // CHANGED: Accuracy Score Visual Progress Bar (Change 5)
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          width: 50,
-                          height: 6,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: LinearProgressIndicator(
-                              value: (result.score.clamp(0, 100)) / 100.0,
-                              backgroundColor: statusColor.withOpacity(0.2),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                statusColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${result.score}%',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: statusColor,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // CHANGED: AI Generated Flag Badge (Change 4)
-              if (result.isAiGenerated == true) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('⚠️', style: TextStyle(fontSize: 12)),
-                      SizedBox(width: 6),
-                      Text(
-                        'AI Generated Content Detected',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (result.authenticityReason != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    result.authenticityReason!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurface,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ],
-              const Divider(height: 24),
-              Text(
-                result.simpleDescription,
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              if (result.references.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  'OFFICIAL SOURCES',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...result.references.map(
-                  (url) => Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () => _launchURL(url),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 6.0,
-                            horizontal: 4.0,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.link,
-                                size: 16,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  url,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: colorScheme.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
+  // Support for re-rendering typing indicator if needed
+  Widget _buildTypingIndicator() {
+    return Container(); // Simplified for now
   }
 }
