@@ -258,13 +258,13 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const Spacer(),
-          IconButton(
+          /*IconButton(
             onPressed: () {},
             icon: const Icon(Icons.notifications_outlined),
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest,
             ),
-          ),
+          ),*/
           const SizedBox(width: 8),
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -289,13 +289,13 @@ class _HomePageState extends State<HomePage> {
                   )
                 : CircleAvatar(
                     radius: 18,
-                    backgroundColor: colorScheme.primaryContainer,
+                    backgroundColor: colorScheme.primary,
                     child: Text(
                       initials,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: colorScheme.onPrimaryContainer,
+                        color: colorScheme.onPrimary,
                       ),
                     ),
                   ),

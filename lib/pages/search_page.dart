@@ -22,6 +22,7 @@ class _SearchPageState extends State<SearchPage> {
   String _selectedStatus = 'All';
   bool _showFilters = false;
   bool _isLoading = false;
+  bool _hasSearched = false; //Added
   String? _errorMessage;
   Timer? _debounce;
 
@@ -52,6 +53,7 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       _query = value;
       _errorMessage = null;
+      _hasSearched = value.trim().isNotEmpty; // ✅ ADDED
     });
 
     _debounce?.cancel();
@@ -131,6 +133,8 @@ class _SearchPageState extends State<SearchPage> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
+                   : !_hasSearched // ✅ FIXED
+                      ? _buildInitialState(context) // ✅ NEW
                   : results.isEmpty
                       ? _buildEmptyState(context)
                       : ListView.separated(
@@ -442,6 +446,33 @@ class _SearchPageState extends State<SearchPage> {
             hasApiError ? (_errorMessage ?? 'Unknown error') : 'Try different keywords or clear filters',
             style: TextStyle(fontSize: 13),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+   // ✅ NEW WIDGET
+  Widget _buildInitialState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search,
+              size: 56, color: colorScheme.outlineVariant),
+          const SizedBox(height: 16),
+          const Text(
+            "Start typing to search",
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "Search for policies, acts, amendments...",
+            style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
