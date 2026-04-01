@@ -1,10 +1,10 @@
+// ignore_for_file: duplicate_import
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../core/theme/app_colors.dart';
 import '../one/localization/app_text.dart';
 import '../services/fact_check_service.dart';
@@ -183,17 +183,11 @@ class _HomePageState extends State<HomePage>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -258,22 +252,22 @@ class _HomePageState extends State<HomePage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    _buildSectionLabel(context, text.overview)
-                        .animate()
-                        .fadeIn(duration: 500.ms)
-                        .slideX(begin: -0.1),
+                    _buildSectionLabel(
+                      context,
+                      text.overview,
+                    ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.1),
                     const SizedBox(height: 12),
                     _buildMetricsGrid(context),
                     const SizedBox(height: 28),
-                   _buildSectionLabel(context, text.recentPolicies)
-                       .animate()
-                       .fadeIn(duration: 500.ms, delay: 100.ms)
-                        .slideX(begin: -0.1),
-                    const SizedBox(height: 12),
-                    _buildPoliciesCard(context, text)
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 200.ms)
-                        .slideY(begin: 0.1),
+                    // _buildSectionLabel(context, text.recentPolicies)
+                    //     .animate()
+                    //     .fadeIn(duration: 500.ms, delay: 100.ms)
+                    //     .slideX(begin: -0.1),
+                    // const SizedBox(height: 12),
+                    // _buildPoliciesCard(context, text)
+                    //     .animate()
+                    //     .fadeIn(duration: 600.ms, delay: 200.ms)
+                    //     .slideY(begin: 0.1),
                     const SizedBox(height: 28),
                     _buildSectionLabel(context, text.recentScamAlerts)
                         .animate()
@@ -363,7 +357,8 @@ class _HomePageState extends State<HomePage>
                       children: [
                         Text(
                           'CivicShield',
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(
                                 color: Colors.white,
                                 fontSize: 28,
                                 letterSpacing: -1,
@@ -385,12 +380,14 @@ class _HomePageState extends State<HomePage>
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
                       ),
-                     // child: IconButton(
-                     //   icon: const Icon(Icons.notifications_none, color: Colors.white),
-                     //   onPressed: () {},
-                     // ),
+                      // child: IconButton(
+                      //   icon: const Icon(Icons.notifications_none, color: Colors.white),
+                      //   onPressed: () {},
+                      // ),
                     ),
                     const SizedBox(width: 12),
                     GestureDetector(
@@ -399,14 +396,20 @@ class _HomePageState extends State<HomePage>
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.premiumGold.withOpacity(0.5), width: 2),
+                          border: Border.all(
+                            color: AppColors.premiumGold.withOpacity(0.5),
+                            width: 2,
+                          ),
                         ),
                         child: CircleAvatar(
                           radius: 18,
                           backgroundColor: AppColors.deepPurple,
                           child: Text(
                             initials,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -420,7 +423,9 @@ class _HomePageState extends State<HomePage>
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchPage())),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SearchPage()),
+                      ),
                       borderRadius: BorderRadius.circular(18),
                       child: Container(
                         height: 56,
@@ -428,11 +433,17 @@ class _HomePageState extends State<HomePage>
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.12),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.search_rounded, color: AppColors.premiumGold, size: 24),
+                            const Icon(
+                              Icons.search_rounded,
+                              color: AppColors.premiumGold,
+                              size: 24,
+                            ),
                             const SizedBox(width: 16),
                             Text(
                               'Search policies or advisories...',
@@ -478,71 +489,77 @@ class _HomePageState extends State<HomePage>
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.3, // Reduced aspect ratio to provide more height
+            childAspectRatio:
+                1.3, // Reduced aspect ratio to provide more height
           ),
           itemCount: _metrics.length,
           itemBuilder: (context, index) {
             final metric = _metrics[index];
             return Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(metric.icon, size: 24, color: metric.iconColor),
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: metric.iconColor?.withOpacity(0.5),
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(metric.icon, size: 24, color: metric.iconColor),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: metric.iconColor?.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            metric.value,
+                            style: GoogleFonts.outfit(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          Text(
+                            metric.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        metric.value,
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      Text(
-                        metric.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            )
-            .animate(delay: (index * 100).ms)
-            .fadeIn(duration: 500.ms)
-            .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutBack);
+                )
+                .animate(delay: (index * 100).ms)
+                .fadeIn(duration: 500.ms)
+                .scale(
+                  begin: const Offset(0.9, 0.9),
+                  curve: Curves.easeOutBack,
+                );
           },
         );
       },
@@ -551,27 +568,27 @@ class _HomePageState extends State<HomePage>
 
   // ─── Policies Card ─────────────────────────────────────────────────────────
 
-  // Widget _buildPoliciesCard(BuildContext context) {
-  //   final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildPoliciesCard(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
 
-  // return Card(
-  //     elevation: 0,
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.circular(16),
-  //       side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
-  //     ),
-  //     color: colorScheme.surface,
-  //     child: Column(
-  //       children: _recentPolicies.asMap().entries.map((entry) {
-  //         return _buildPolicyListItem(
-  //           context,
-  //           entry.value,
-  //           entry.key == _recentPolicies.length - 1,
-  //         );
-  //       }).toList(),
-  //     ),
-  //   );
-  // }
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+      ),
+      //color: colorScheme.surface,
+      // child: Column(
+      //   children: _recentPolicies.asMap().entries.map((entry) {
+      //     return _buildPolicyListItem(
+      //       context,
+      //       entry.value,
+      //       entry.key == _recentPolicies.length - 1,
+      //     );
+      //   }).toList(),
+      // ),
+    );
+  }
 
   Widget _buildPolicyListItem(
     BuildContext context,
@@ -977,11 +994,11 @@ class _HomePageState extends State<HomePage>
                 size: 22,
                 color: Colors.white,
               ),
-              child: Icon(
-                Icons.auto_awesome,
-                size: 20,
-                color: colorScheme.onPrimaryContainer,
-              ),
+              // child: Icon(
+              //   Icons.auto_awesome,
+              //   size: 20,
+              //   color: colorScheme.onPrimaryContainer,
+              // ),
             ),
             const SizedBox(width: 14),
             Expanded(
