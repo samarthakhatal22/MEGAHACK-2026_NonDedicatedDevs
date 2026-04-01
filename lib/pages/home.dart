@@ -140,32 +140,32 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
-  final List<PolicyModel> _recentPolicies = const [
-    PolicyModel(
-      title: 'Digital India Act 2024',
-      ministry: 'MeitY',
-      date: 'Jan 2024',
-      status: PolicyStatus.active,
-    ),
-    PolicyModel(
-      title: 'NEP Amendment v3',
-      ministry: 'MoE',
-      date: 'Mar 2024',
-      status: PolicyStatus.draft,
-    ),
-    PolicyModel(
-      title: 'PDPB Regulations',
-      ministry: 'MHA',
-      date: 'Feb 2024',
-      status: PolicyStatus.conflict,
-    ),
-    PolicyModel(
-      title: 'Green Hydrogen Mission',
-      ministry: 'MNRE',
-      date: 'Apr 2024',
-      status: PolicyStatus.review,
-    ),
-  ];
+  // final List<PolicyModel> _recentPolicies = const [
+  //   PolicyModel(
+  //     title: 'Digital India Act 2024',
+  //     ministry: 'MeitY',
+  //     date: 'Jan 2024',
+  //     status: PolicyStatus.active,
+  //   ),
+  //   PolicyModel(
+  //     title: 'NEP Amendment v3',
+  //     ministry: 'MoE',
+  //     date: 'Mar 2024',
+  //     status: PolicyStatus.draft,
+  //   ),
+  //   PolicyModel(
+  //     title: 'PDPB Regulations',
+  //     ministry: 'MHA',
+  //     date: 'Feb 2024',
+  //     status: PolicyStatus.conflict,
+  //   ),
+  //   PolicyModel(
+  //     title: 'Green Hydrogen Mission',
+  //     ministry: 'MNRE',
+  //     date: 'Apr 2024',
+  //     status: PolicyStatus.review,
+  //   ),
+  // ];
 
   @override
   Widget build(BuildContext context) {
@@ -219,10 +219,10 @@ class _HomePageState extends State<HomePage> {
                 _buildSectionLabel(context, 'Overview'),
                 const SizedBox(height: 8),
                 _buildMetricsGrid(context),
-                const SizedBox(height: 20),
-                _buildSectionLabel(context, 'Recent policies'),
-                const SizedBox(height: 8),
-                _buildPoliciesCard(context),
+                // const SizedBox(height: 20),
+                // _buildSectionLabel(context, 'Recent policies'),
+                // const SizedBox(height: 8),
+                // _buildPoliciesCard(context),
                 const SizedBox(height: 20),
                 _buildSectionLabel(context, 'Recent Scam Alerts'),
                 const SizedBox(height: 8),
@@ -258,13 +258,13 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined),
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest,
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(Icons.notifications_outlined),
+          //   style: IconButton.styleFrom(
+          //     backgroundColor: colorScheme.surfaceContainerHighest,
+          //   ),
+          // ),
           const SizedBox(width: 8),
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -414,27 +414,27 @@ class _HomePageState extends State<HomePage> {
 
   // ─── Policies Card ─────────────────────────────────────────────────────────
 
-  Widget _buildPoliciesCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  // Widget _buildPoliciesCard(BuildContext context) {
+  //   final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
-      ),
-      color: colorScheme.surface,
-      child: Column(
-        children: _recentPolicies.asMap().entries.map((entry) {
-          return _buildPolicyListItem(
-            context,
-            entry.value,
-            entry.key == _recentPolicies.length - 1,
-          );
-        }).toList(),
-      ),
-    );
-  }
+  // return Card(
+  //     elevation: 0,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(16),
+  //       side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+  //     ),
+  //     color: colorScheme.surface,
+  //     child: Column(
+  //       children: _recentPolicies.asMap().entries.map((entry) {
+  //         return _buildPolicyListItem(
+  //           context,
+  //           entry.value,
+  //           entry.key == _recentPolicies.length - 1,
+  //         );
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
 
   Widget _buildPolicyListItem(
     BuildContext context,
