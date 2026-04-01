@@ -12,7 +12,13 @@ import 'ScamAlert.dart';
 import 'fact_check_chat.dart';
 import 'profile.dart';
 import 'scams_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'profile.dart';
+import 'scams_page.dart';
+import 'fact_check_chat.dart';
 import 'search_page.dart';
+import 'ScamAlert.dart';
+import '../services/fact_check_service.dart';
 
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
@@ -143,32 +149,32 @@ class _HomePageState extends State<HomePage>
     ),
   ];
 
-  final List<PolicyModel> _recentPolicies = const [
-    PolicyModel(
-      title: 'Digital India Act 2024',
-      ministry: 'MeitY',
-      date: 'Jan 2024',
-      status: PolicyStatus.active,
-    ),
-    PolicyModel(
-      title: 'NEP Amendment v3',
-      ministry: 'MoE',
-      date: 'Mar 2024',
-      status: PolicyStatus.draft,
-    ),
-    PolicyModel(
-      title: 'PDPB Regulations',
-      ministry: 'MHA',
-      date: 'Feb 2024',
-      status: PolicyStatus.conflict,
-    ),
-    PolicyModel(
-      title: 'Green Hydrogen Mission',
-      ministry: 'MNRE',
-      date: 'Apr 2024',
-      status: PolicyStatus.review,
-    ),
-  ];
+  // final List<PolicyModel> _recentPolicies = const [
+  //   PolicyModel(
+  //     title: 'Digital India Act 2024',
+  //     ministry: 'MeitY',
+  //     date: 'Jan 2024',
+  //     status: PolicyStatus.active,
+  //   ),
+  //   PolicyModel(
+  //     title: 'NEP Amendment v3',
+  //     ministry: 'MoE',
+  //     date: 'Mar 2024',
+  //     status: PolicyStatus.draft,
+  //   ),
+  //   PolicyModel(
+  //     title: 'PDPB Regulations',
+  //     ministry: 'MHA',
+  //     date: 'Feb 2024',
+  //     status: PolicyStatus.conflict,
+  //   ),
+  //   PolicyModel(
+  //     title: 'Green Hydrogen Mission',
+  //     ministry: 'MNRE',
+  //     date: 'Apr 2024',
+  //     status: PolicyStatus.review,
+  //   ),
+  // ];
 
   @override
   void initState() {
@@ -259,9 +265,9 @@ class _HomePageState extends State<HomePage>
                     const SizedBox(height: 12),
                     _buildMetricsGrid(context),
                     const SizedBox(height: 28),
-                    _buildSectionLabel(context, text.recentPolicies)
-                        .animate()
-                        .fadeIn(duration: 500.ms, delay: 100.ms)
+                   _buildSectionLabel(context, text.recentPolicies)
+                       .animate()
+                       .fadeIn(duration: 500.ms, delay: 100.ms)
                         .slideX(begin: -0.1),
                     const SizedBox(height: 12),
                     _buildPoliciesCard(context, text)
@@ -381,10 +387,10 @@ class _HomePageState extends State<HomePage>
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: Colors.white.withOpacity(0.1)),
                       ),
-                      child: IconButton(
-                        icon: const Icon(Icons.notifications_none, color: Colors.white),
-                        onPressed: () {},
-                      ),
+                     // child: IconButton(
+                     //   icon: const Icon(Icons.notifications_none, color: Colors.white),
+                     //   onPressed: () {},
+                     // ),
                     ),
                     const SizedBox(width: 12),
                     GestureDetector(
@@ -543,32 +549,29 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildPoliciesCard(BuildContext context, AppText text) {
-    final colorScheme = Theme.of(context).colorScheme;
+  // ─── Policies Card ─────────────────────────────────────────────────────────
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant, width: 0.8),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryIndigo.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: _recentPolicies.asMap().entries.map((entry) {
-          final index = entry.key;
-          final policy = entry.value;
-          final isLast = index == _recentPolicies.length - 1;
-          return _buildPolicyListItem(context, policy, isLast, text);
-        }).toList(),
-      ),
-    );
-  }
+  // Widget _buildPoliciesCard(BuildContext context) {
+  //   final colorScheme = Theme.of(context).colorScheme;
+
+  // return Card(
+  //     elevation: 0,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(16),
+  //       side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+  //     ),
+  //     color: colorScheme.surface,
+  //     child: Column(
+  //       children: _recentPolicies.asMap().entries.map((entry) {
+  //         return _buildPolicyListItem(
+  //           context,
+  //           entry.value,
+  //           entry.key == _recentPolicies.length - 1,
+  //         );
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
 
   Widget _buildPolicyListItem(
     BuildContext context,
@@ -973,6 +976,11 @@ class _HomePageState extends State<HomePage>
                 Icons.auto_awesome,
                 size: 22,
                 color: Colors.white,
+              ),
+              child: Icon(
+                Icons.auto_awesome,
+                size: 20,
+                color: colorScheme.onPrimaryContainer,
               ),
             ),
             const SizedBox(width: 14),

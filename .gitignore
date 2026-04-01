@@ -1,7 +1,7 @@
 # Miscellaneous
 *.class
 *.log
-.env
+assets/.env
 *.swp
 .DS_Store
 .atom/
