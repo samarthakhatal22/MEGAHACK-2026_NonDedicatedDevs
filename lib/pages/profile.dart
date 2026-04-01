@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../one/providers/theme_provider.dart';
 import 'full_history.dart';
- 
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
- 
+
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
- 
+
 class _ProfilePageState extends State<ProfilePage> {
   bool _notificationsEnabled = true;
   bool _emailAlerts = true;
@@ -34,18 +34,23 @@ class _ProfilePageState extends State<ProfilePage> {
     _searchController.dispose();
     super.dispose();
   }
- 
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return const Scaffold(body: Center(child: Text('Please log in')));
+    if (user == null)
+      return const Scaffold(body: Center(child: Text('Please log in')));
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
       builder: (streamContext, userSnapshot) {
-        final userData = userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
+        final userData =
+            userSnapshot.data?.data() as Map<String, dynamic>? ?? {};
         final fullName = userData['fullName'] ?? user.displayName ?? 'New User';
         final email = userData['email'] ?? user.email ?? '';
         final ministry = userData['ministry'] ?? 'Not specified';
@@ -69,23 +74,31 @@ class _ProfilePageState extends State<ProfilePage> {
                           context,
                           title: 'Account',
                           children: [
-                            _buildInfoTile(context,
-                                icon: Icons.person_outline,
-                                label: 'Full name',
-                                value: fullName),
-                            _buildInfoTile(context,
-                                icon: Icons.email_outlined,
-                                label: 'Email',
-                                value: email),
-                            _buildInfoTile(context,
-                                icon: Icons.business_outlined,
-                                label: 'Ministry',
-                                value: ministry),
-                            _buildInfoTile(context,
-                                icon: Icons.badge_outlined,
-                                label: 'Role',
-                                value: role,
-                                isLast: true),
+                            _buildInfoTile(
+                              context,
+                              icon: Icons.person_outline,
+                              label: 'Full name',
+                              value: fullName,
+                            ),
+                            _buildInfoTile(
+                              context,
+                              icon: Icons.email_outlined,
+                              label: 'Email',
+                              value: email,
+                            ),
+                            _buildInfoTile(
+                              context,
+                              icon: Icons.business_outlined,
+                              label: 'Ministry',
+                              value: ministry,
+                            ),
+                            _buildInfoTile(
+                              context,
+                              icon: Icons.badge_outlined,
+                              label: 'Role',
+                              value: role,
+                              isLast: true,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -110,14 +123,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                   setState(() => _emailAlerts = val),
                             ),
                             Consumer<ThemeProvider>(
-                              builder: (consumerContext, themeProvider, _) => _buildToggleTile(
-                                context,
-                                icon: Icons.dark_mode_outlined,
-                                label: 'Dark mode',
-                                value: themeProvider.isDark,
-                                onChanged: (val) => themeProvider.toggleTheme(val),
-                                isLast: true,
-                              ),
+                              builder: (consumerContext, themeProvider, _) =>
+                                  _buildToggleTile(
+                                    context,
+                                    icon: Icons.dark_mode_outlined,
+                                    label: 'Dark mode',
+                                    value: themeProvider.isDark,
+                                    onChanged: (val) =>
+                                        themeProvider.toggleTheme(val),
+                                    isLast: true,
+                                  ),
                             ),
                           ],
                         ),
@@ -142,15 +157,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         );
-      }
+      },
     );
   }
- 
+
   // ── Top Bar ──────────────────────────────────────────────────────────────────
- 
+
   Widget _buildTopBar(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 16, 0),
       child: Row(
@@ -177,13 +192,24 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
- 
+
   // ── Profile Header ───────────────────────────────────────────────────────────
- 
-  Widget _buildProfileHeader(BuildContext context, String name, String ministry, String role) {
+
+  Widget _buildProfileHeader(
+    BuildContext context,
+    String name,
+    String ministry,
+    String role,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final initials = name.trim().split(' ').where((e) => e.isNotEmpty).map((e) => e[0].toUpperCase()).take(2).join('');
- 
+    final initials = name
+        .trim()
+        .split(' ')
+        .where((e) => e.isNotEmpty)
+        .map((e) => e[0].toUpperCase())
+        .take(2)
+        .join('');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24),
@@ -212,11 +238,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   decoration: BoxDecoration(
                     color: colorScheme.primary,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                        color: colorScheme.surface, width: 2),
+                    border: Border.all(color: colorScheme.surface, width: 2),
                   ),
-                  child: Icon(Icons.camera_alt,
-                      size: 12, color: colorScheme.onPrimary),
+                  child: Icon(
+                    Icons.camera_alt,
+                    size: 12,
+                    color: colorScheme.onPrimary,
+                  ),
                 ),
               ),
             ],
@@ -233,15 +261,11 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 4),
           Text(
             '$role · $ministry',
-            style: TextStyle(
-              fontSize: 13,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 10),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFD7EDCA),
               borderRadius: BorderRadius.circular(20),
@@ -259,17 +283,20 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
- 
+
   // ── Activity Stats ───────────────────────────────────────────────────────────
- 
+
   Widget _buildActivityStats(BuildContext context, String uid) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('fact_checks').where('userId', isEqualTo: uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('fact_checks')
+          .where('userId', isEqualTo: uid)
+          .snapshots(),
       builder: (statsContext, snapshot) {
         final factCheckCount = snapshot.data?.docs.length ?? 0;
-        
+
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Container(
@@ -282,21 +309,24 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 _buildStatItem(statsContext, '0', 'Searches'),
                 _buildStatDivider(statsContext),
-                _buildStatItem(statsContext, factCheckCount.toString(), 'Chats'),
+                _buildStatItem(
+                  statsContext,
+                  factCheckCount.toString(),
+                  'Chats',
+                ),
                 _buildStatDivider(statsContext),
                 _buildStatItem(statsContext, '0', 'Saved'),
               ],
             ),
           ),
         );
-      }
+      },
     );
   }
- 
-  Widget _buildStatItem(
-      BuildContext context, String value, String label) {
+
+  Widget _buildStatItem(BuildContext context, String value, String label) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Expanded(
       child: Column(
         children: [
@@ -311,34 +341,27 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
- 
+
   Widget _buildStatDivider(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 0.5,
-      height: 36,
-      color: colorScheme.outlineVariant,
-    );
+    return Container(width: 0.5, height: 36, color: colorScheme.outlineVariant);
   }
- 
+
   // ── Section Card ─────────────────────────────────────────────────────────────
- 
+
   Widget _buildSectionCard(
     BuildContext context, {
     required String title,
     required List<Widget> children,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -360,8 +383,7 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration: BoxDecoration(
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: colorScheme.outlineVariant, width: 0.5),
+              border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
             ),
             child: Column(children: children),
           ),
@@ -369,9 +391,9 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
- 
+
   // ── Info Tile ────────────────────────────────────────────────────────────────
- 
+
   Widget _buildInfoTile(
     BuildContext context, {
     required IconData icon,
@@ -380,7 +402,7 @@ class _ProfilePageState extends State<ProfilePage> {
     bool isLast = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -388,7 +410,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ? null
             : Border(
                 bottom: BorderSide(
-                    color: colorScheme.outlineVariant, width: 0.5)),
+                  color: colorScheme.outlineVariant,
+                  width: 0.5,
+                ),
+              ),
       ),
       child: Row(
         children: [
@@ -396,10 +421,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(width: 12),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
           ),
           const Spacer(),
           Text(
@@ -414,9 +436,9 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
- 
+
   // ── Toggle Tile ──────────────────────────────────────────────────────────────
- 
+
   Widget _buildToggleTile(
     BuildContext context, {
     required IconData icon,
@@ -426,7 +448,7 @@ class _ProfilePageState extends State<ProfilePage> {
     bool isLast = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
@@ -434,7 +456,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ? null
             : Border(
                 bottom: BorderSide(
-                    color: colorScheme.outlineVariant, width: 0.5)),
+                  color: colorScheme.outlineVariant,
+                  width: 0.5,
+                ),
+              ),
       ),
       child: Row(
         children: [
@@ -442,10 +467,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(width: 12),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
-              color: colorScheme.onSurface,
-            ),
+            style: TextStyle(fontSize: 13, color: colorScheme.onSurface),
           ),
           const Spacer(),
           Switch(
@@ -457,9 +479,9 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
- 
+
   // ── Nav Tile ─────────────────────────────────────────────────────────────────
- 
+
   Widget _buildNavTile(
     BuildContext context, {
     required IconData icon,
@@ -468,23 +490,26 @@ class _ProfilePageState extends State<ProfilePage> {
     bool isLast = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
- 
+
     return InkWell(
       onTap: onTap,
       borderRadius: isLast
           ? const BorderRadius.only(
               bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16))
+              bottomRight: Radius.circular(16),
+            )
           : null,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
           border: isLast
               ? null
               : Border(
                   bottom: BorderSide(
-                      color: colorScheme.outlineVariant, width: 0.5)),
+                    color: colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
         ),
         child: Row(
           children: [
@@ -492,22 +517,22 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(width: 12),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 13,
-                color: colorScheme.onSurface,
-              ),
+              style: TextStyle(fontSize: 13, color: colorScheme.onSurface),
             ),
             const Spacer(),
-            Icon(Icons.chevron_right,
-                size: 18, color: colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),
     );
   }
- 
+
   // ── Logout Button ────────────────────────────────────────────────────────────
- 
+
   Widget _buildLogoutButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -535,9 +560,9 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
- 
+
   // ── Fact Check History ──────────────────────────────────────────────────────
-  
+
   Widget _buildFactCheckHistory(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final user = FirebaseAuth.instance.currentUser;
@@ -567,18 +592,20 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ),
-        
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('fact_checks')
-                .where('userId', isEqualTo: user.uid)
-                .snapshots(),
-            builder: (historyContext, snapshot) {
+
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('fact_checks')
+              .where('userId', isEqualTo: user.uid)
+              .snapshots(),
+          builder: (historyContext, snapshot) {
             if (snapshot.hasError) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text('Error loading history: ${snapshot.error}', 
-                  style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  'Error loading history: ${snapshot.error}',
+                  style: const TextStyle(fontSize: 12),
+                ),
               );
             }
 
@@ -590,29 +617,38 @@ class _ProfilePageState extends State<ProfilePage> {
             }
 
             final allDocs = snapshot.data?.docs ?? [];
-            
+
             // Client-side sorting by timestamp (descending)
-            final sortedDocs = allDocs.toList()..sort((a, b) {
-              final aTime = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
-              final bTime = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
-              if (aTime == null || bTime == null) return 0;
-              return bTime.compareTo(aTime); // Latest first
-            });
+            final sortedDocs = allDocs.toList()
+              ..sort((a, b) {
+                final aTime =
+                    (a.data() as Map<String, dynamic>)['timestamp']
+                        as Timestamp?;
+                final bTime =
+                    (b.data() as Map<String, dynamic>)['timestamp']
+                        as Timestamp?;
+                if (aTime == null || bTime == null) return 0;
+                return bTime.compareTo(aTime); // Latest first
+              });
 
             // Client-side filtering
             final docs = sortedDocs.where((doc) {
               final data = doc.data() as Map<String, dynamic>;
-              final queryText = (data['queryText'] ?? '').toString().toLowerCase();
+              final queryText = (data['queryText'] ?? '')
+                  .toString()
+                  .toLowerCase();
               return queryText.contains(_searchQuery);
             }).toList();
-            
+
             if (docs.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Center(
                   child: Text(
-                    _searchQuery.isEmpty ? 'No history yet' : 'No results found', 
-                    style: const TextStyle(fontSize: 13, color: Colors.grey)
+                    _searchQuery.isEmpty
+                        ? 'No history yet'
+                        : 'No results found',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
                   ),
                 ),
               );
@@ -623,7 +659,7 @@ class _ProfilePageState extends State<ProfilePage> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: docs.length > 5 ? 5 : docs.length, // Show last 5
               separatorBuilder: (context, index) => Divider(
-                height: 1, 
+                height: 1,
                 color: colorScheme.outlineVariant,
                 indent: 14,
                 endIndent: 14,
@@ -637,19 +673,27 @@ class _ProfilePageState extends State<ProfilePage> {
                 final timestamp = data['timestamp'] as Timestamp?;
 
                 // CHANGED: Null-safe reads for new fields (Change 4)
-                final socialSources = result?['socialSourcesChecked'] as List<dynamic>? ?? [];
+                final socialSources =
+                    result?['socialSourcesChecked'] as List<dynamic>? ?? [];
                 final deepAnalysis = data['deepAnalysis'] as String? ?? '';
-                
+
                 String timeStr = 'Recent';
                 if (timestamp != null) {
-                  timeStr = DateFormat('MMM d, h:mm a').format(timestamp.toDate());
+                  timeStr = DateFormat(
+                    'MMM d, h:mm a',
+                  ).format(timestamp.toDate());
                 }
 
                 Color statusColor;
                 switch (status.toLowerCase()) {
-                  case 'true': statusColor = Colors.green; break;
-                  case 'false': statusColor = Colors.red; break;
-                  default: statusColor = Colors.orange;
+                  case 'true':
+                    statusColor = Colors.green;
+                    break;
+                  case 'false':
+                    statusColor = Colors.red;
+                    break;
+                  default:
+                    statusColor = Colors.orange;
                 }
 
                 return Column(
@@ -665,27 +709,42 @@ class _ProfilePageState extends State<ProfilePage> {
                             height: 120,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
                           ),
                         ),
                       ),
 
                     ListTile(
                       dense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 4,
+                      ),
                       title: Text(
                         query,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
                       ),
-                      subtitle: Text(timeStr, style: const TextStyle(fontSize: 11)),
+                      subtitle: Text(
+                        timeStr,
+                        style: const TextStyle(fontSize: 11),
+                      ),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Text(
                           status.toUpperCase(),
@@ -721,20 +780,22 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // ── Logout Dialog ────────────────────────────────────────────────────────────
- 
+
   void _showLogoutDialog(BuildContext context) {
     debugPrint('Attempting to show logout dialog with context: $context');
     showDialog(
       context: context,
-      useRootNavigator: true, 
+      useRootNavigator: true,
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log out?',
-            style: TextStyle(fontWeight: FontWeight.w500)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Log out?',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         content: const Text(
-            'You will need to sign in again to access PolicyLens.'),
+          'You will need to sign in again to access PolicyLens.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -755,7 +816,4 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
-
 }
- 

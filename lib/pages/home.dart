@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'profile.dart';
-import 'package:civicshield/Widgets/scamalertsection.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'profile.dart';
 import 'scams_page.dart';
 import 'fact_check_chat.dart';
-import '../services/fact_check_service.dart';
-import '../widgets/scamalertsection.dart';
-import 'ScamAlert.dart';
 import 'search_page.dart';
+import 'ScamAlert.dart';
+import '../services/fact_check_service.dart';
 
 class PolicyLensApp extends StatelessWidget {
   const PolicyLensApp({super.key});
@@ -142,32 +140,32 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
-  final List<PolicyModel> _recentPolicies = const [
-    PolicyModel(
-      title: 'Digital India Act 2024',
-      ministry: 'MeitY',
-      date: 'Jan 2024',
-      status: PolicyStatus.active,
-    ),
-    PolicyModel(
-      title: 'NEP Amendment v3',
-      ministry: 'MoE',
-      date: 'Mar 2024',
-      status: PolicyStatus.draft,
-    ),
-    PolicyModel(
-      title: 'PDPB Regulations',
-      ministry: 'MHA',
-      date: 'Feb 2024',
-      status: PolicyStatus.conflict,
-    ),
-    PolicyModel(
-      title: 'Green Hydrogen Mission',
-      ministry: 'MNRE',
-      date: 'Apr 2024',
-      status: PolicyStatus.review,
-    ),
-  ];
+  // final List<PolicyModel> _recentPolicies = const [
+  //   PolicyModel(
+  //     title: 'Digital India Act 2024',
+  //     ministry: 'MeitY',
+  //     date: 'Jan 2024',
+  //     status: PolicyStatus.active,
+  //   ),
+  //   PolicyModel(
+  //     title: 'NEP Amendment v3',
+  //     ministry: 'MoE',
+  //     date: 'Mar 2024',
+  //     status: PolicyStatus.draft,
+  //   ),
+  //   PolicyModel(
+  //     title: 'PDPB Regulations',
+  //     ministry: 'MHA',
+  //     date: 'Feb 2024',
+  //     status: PolicyStatus.conflict,
+  //   ),
+  //   PolicyModel(
+  //     title: 'Green Hydrogen Mission',
+  //     ministry: 'MNRE',
+  //     date: 'Apr 2024',
+  //     status: PolicyStatus.review,
+  //   ),
+  // ];
 
   @override
   Widget build(BuildContext context) {
@@ -221,10 +219,10 @@ class _HomePageState extends State<HomePage> {
                 _buildSectionLabel(context, 'Overview'),
                 const SizedBox(height: 8),
                 _buildMetricsGrid(context),
-                const SizedBox(height: 20),
-                _buildSectionLabel(context, 'Recent policies'),
-                const SizedBox(height: 8),
-                _buildPoliciesCard(context),
+                // const SizedBox(height: 20),
+                // _buildSectionLabel(context, 'Recent policies'),
+                // const SizedBox(height: 8),
+                // _buildPoliciesCard(context),
                 const SizedBox(height: 20),
                 _buildSectionLabel(context, 'Recent Scam Alerts'),
                 const SizedBox(height: 8),
@@ -260,13 +258,13 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined),
-            style: IconButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest,
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(Icons.notifications_outlined),
+          //   style: IconButton.styleFrom(
+          //     backgroundColor: colorScheme.surfaceContainerHighest,
+          //   ),
+          // ),
           const SizedBox(width: 8),
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -330,7 +328,10 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: Text(
                 'Search policies, acts, amendments...',
-                style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             Icon(Icons.tune, color: colorScheme.primary, size: 20),
@@ -413,29 +414,33 @@ class _HomePageState extends State<HomePage> {
 
   // ─── Policies Card ─────────────────────────────────────────────────────────
 
-  Widget _buildPoliciesCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  // Widget _buildPoliciesCard(BuildContext context) {
+  //   final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
-      ),
-      color: colorScheme.surface,
-      child: Column(
-        children: _recentPolicies.asMap().entries.map((entry) {
-          return _buildPolicyListItem(
-            context,
-            entry.value,
-            entry.key == _recentPolicies.length - 1,
-          );
-        }).toList(),
-      ),
-    );
-  }
+  // return Card(
+  //     elevation: 0,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(16),
+  //       side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+  //     ),
+  //     color: colorScheme.surface,
+  //     child: Column(
+  //       children: _recentPolicies.asMap().entries.map((entry) {
+  //         return _buildPolicyListItem(
+  //           context,
+  //           entry.value,
+  //           entry.key == _recentPolicies.length - 1,
+  //         );
+  //       }).toList(),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildPolicyListItem(BuildContext context, PolicyModel policy, bool isLast) {
+  Widget _buildPolicyListItem(
+    BuildContext context,
+    PolicyModel policy,
+    bool isLast,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusConfig = _getStatusConfig(policy.status);
 
@@ -453,7 +458,10 @@ class _HomePageState extends State<HomePage> {
           border: isLast
               ? null
               : Border(
-                  bottom: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+                  bottom: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
                 ),
         ),
         child: Row(
@@ -465,7 +473,11 @@ class _HomePageState extends State<HomePage> {
                 color: statusConfig.iconBg,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(statusConfig.icon, size: 18, color: statusConfig.iconColor),
+              child: Icon(
+                statusConfig.icon,
+                size: 18,
+                color: statusConfig.iconColor,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -485,7 +497,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 2),
                   Text(
                     '${policy.ministry} · ${policy.date}',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -509,7 +524,11 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Text(
         config.label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: config.chipText),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: config.chipText,
+        ),
       ),
     );
   }
@@ -612,12 +631,16 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Why it is fake:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Why it is fake:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Text((alert['why_it_is_fake'] ?? '').toString()),
                   const SizedBox(height: 12),
-                  const Text('How to stay safe:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'How to stay safe:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Text((alert['how_to_stay_safe'] ?? '').toString()),
                 ],
               ),
@@ -643,7 +666,10 @@ class _HomePageState extends State<HomePage> {
           border: isLast
               ? null
               : Border(
-                  bottom: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+                  bottom: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
                 ),
         ),
         child: Row(
@@ -657,7 +683,11 @@ class _HomePageState extends State<HomePage> {
                 color: riskBg,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.warning_amber_rounded, size: 20, color: riskColor),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                size: 20,
+                color: riskColor,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -677,7 +707,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 4),
                   Text(
                     (alert['short_description'] ?? '').toString(),
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -685,7 +718,10 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(4),
@@ -745,7 +781,11 @@ class _HomePageState extends State<HomePage> {
                 color: colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.auto_awesome, size: 20, color: colorScheme.onPrimaryContainer),
+              child: Icon(
+                Icons.auto_awesome,
+                size: 20,
+                color: colorScheme.onPrimaryContainer,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -762,7 +802,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Text(
                     'Verify claims and policy details quickly',
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -772,7 +815,10 @@ class _HomePageState extends State<HomePage> {
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -789,7 +835,8 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBottomNav(BuildContext context) {
     return NavigationBar(
       selectedIndex: _selectedNavIndex,
-      onDestinationSelected: (index) => setState(() => _selectedNavIndex = index),
+      onDestinationSelected: (index) =>
+          setState(() => _selectedNavIndex = index),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       destinations: const [
         NavigationDestination(
