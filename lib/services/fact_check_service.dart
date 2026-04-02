@@ -178,8 +178,8 @@ class FactCheckService {
   FactCheckService({String? apiKey}) : _injectedApiKey = apiKey;
 
   String get _effectiveApiKey {
-    final key = _injectedApiKey != null && _injectedApiKey!.isNotEmpty
-        ? _injectedApiKey!
+    final key = _injectedApiKey != null && _injectedApiKey.isNotEmpty
+        ? _injectedApiKey
         : (dotenv.env['GROQ_API_KEY'] ??
               const String.fromEnvironment('GROQ_API_KEY'));
     return key;
